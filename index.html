@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#FFFBF0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>福岡療癒之旅</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'jp-bg': '#FFFBF0', 
+                        'jp-card': '#FFFFFF',
+                        'jp-text': '#4A4238', 
+                        'jp-accent': '#C58945', 
+                        'jp-blue-light': '#E0F2FE',
+                    },
+                    fontFamily: {
+                        sans: ['Zen Maru Gothic', 'Noto Sans JP', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .page-enter { animation: fadeIn 0.3s ease-out; }
+        .modal-enter { animation: slideUp 0.25s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid rgba(0,0,0,0.05); }
+        .siren-active { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite; background-color: #EF4444 !important; color: white !important; border-color: #EF4444 !important; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+        
+        /* Layout Adjustments */
+        .timeline-line { position: absolute; left: 3.5rem; top: 2.2rem; bottom: -1rem; width: 2px; background: #E5E7EB; z-index: 0; }
+        .last-item .timeline-line { display: none; }
+        
+        .nav-btn.active { color: #C58945; transform: translateY(-2px); }
+        .nav-btn.active::after { content: ''; position: absolute; bottom: -4px; width: 4px; height: 4px; background: #C58945; border-radius: 50%; }
+        .weather-fade-in { animation: fadeIn 0.5s ease-in forwards; }
+        
+        /* Boarding Pass Style */
+        .ticket-notch { position: absolute; width: 20px; height: 20px; background-color: #FFFBF0; border-radius: 50%; top: 50%; margin-top: -10px; z-index: 10; }
+        .ticket-notch-l { left: -10px; }
+        .ticket-notch-r { right: -10px; }
+    </style>
+</head>
+<body class="bg-jp-bg text-jp-text h-[100dvh] w-full flex flex-col overflow-hidden font-sans select-none">
+
+    <header class="px-5 pt-10 pb-2 flex justify-between items-center bg-jp-bg z-30 relative shrink-0">
+        <div onclick="openTaxiCard()" class="cursor-pointer group">
+            <h1 class="text-2xl font-bold tracking-widest text-jp-text flex items-center gap-2">
+                福岡療癒之旅 <i class="fa-solid fa-taxi text-xs text-white bg-jp-accent p-1.5 rounded-full shadow-sm group-active:scale-110 transition"></i>
+            </h1>
+        </div>
+        
+        <div class="flex gap-3">
+            <button onclick="openTripInfo()" class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 shadow-sm border border-blue-100 active:scale-95 transition flex items-center justify-center">
+                <i class="fa-solid fa-circle-info text-base"></i>
+            </button>
+            <button onclick="openModal('safety')" class="w-10 h-10 rounded-full bg-red-50 text-red-500 shadow-sm border border-red-100 active:scale-95 transition flex items-center justify-center">
+                <i class="fa-solid fa-shield-halved text-base"></i>
+            </button>
+            <button onclick="toggleMainMenu()" class="w-10 h-10 rounded-full bg-white shadow-sm active:scale-95 transition flex items-center justify-center border border-gray-100 relative">
+                <i class="fa-solid fa-bars text-base text-jp-text"></i>
+                <span id="global-badge" class="absolute top-0 right-0 w-2.5 h-2.5 bg-red-400 rounded-full border-2 border-white hidden"></span>
+            </button>
+        </div>
+
+        <div id="main-menu" class="hidden absolute top-20 right-5 w-52 glass rounded-xl shadow-xl p-2 z-50 transform origin-top-right transition-all duration-200 border border-white/50">
+            <button onclick="openModal('luggage')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/60 flex items-center gap-3 transition text-base">
+                <i class="fa-solid fa-suitcase text-purple-400 w-5 text-center"></i> 行李
+                <span id="menu-badge-luggage" class="ml-auto text-xs bg-red-100 text-red-500 px-2 py-0.5 rounded-full hidden">0</span>
+            </button>
+            <button onclick="openModal('shopping')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/60 flex items-center gap-3 transition text-base">
+                <i class="fa-solid fa-bag-shopping text-pink-400 w-5 text-center"></i> 購物
+                <span id="menu-badge-shop" class="ml-auto text-xs bg-red-100 text-red-500 px-2 py-0.5 rounded-full hidden">0</span>
+            </button>
+            <button onclick="openModal('todo')" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/60 flex items-center gap-3 transition text-base">
+                <i class="fa-solid fa-check-circle text-blue-400 w-5 text-center"></i> 待辦
+            </button>
+            <div class="my-1 border-t border-gray-100/50"></div>
+            <button onclick="exportData()" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/60 flex items-center gap-3 transition text-sm text-gray-500">
+                <i class="fa-solid fa-download w-5 text-center"></i> 備份
+            </button>
+            <button onclick="document.getElementById('file-input').click()" class="w-full text-left px-4 py-3 rounded-lg hover:bg-white/60 flex items-center gap-3 transition text-sm text-gray-500">
+                <i class="fa-solid fa-upload w-5 text-center"></i> 還原
+            </button>
+            <input type="file" id="file-input" class="hidden" accept=".json" onchange="importData(this)">
+        </div>
+        <div id="menu-overlay" onclick="toggleMainMenu()" class="hidden fixed inset-0 z-40 bg-black/5"></div>
+    </header>
+
+    <div class="pl-5 py-2 bg-jp-bg z-10 shrink-0 border-b border-gray-100/50">
+        <div id="date-slider" class="flex gap-3 overflow-x-auto no-scrollbar pr-5 pb-2"></div>
+    </div>
+
+    <main id="main-container" class="flex-1 overflow-y-auto bg-jp-bg relative scroll-smooth no-scrollbar">
+        
+        <div id="view-itinerary" class="page-enter pb-24 px-5 pt-4">
+            <div id="weather-info-bar" class="text-xs text-gray-400 text-center mb-4 hidden bg-white/60 py-1.5 rounded-lg border border-white/50">
+                <i class="fa-solid fa-clock-rotate-left mr-1"></i> 顯示 2024年同期歷史天氣供參考
+            </div>
+            <div id="itinerary-list" class="space-y-0 relative"></div>
+            
+            <button onclick="openAddModal('itinerary')" class="mt-8 w-full py-4 rounded-2xl border-2 border-dashed border-jp-accent/30 text-jp-accent text-base font-bold hover:bg-white transition flex justify-center items-center gap-2 group">
+                <i class="fa-solid fa-plus text-sm group-hover:scale-110 transition"></i> 新增行程
+            </button>
+        </div>
+
+        <div id="view-map" class="hidden h-full flex flex-col page-enter px-2 pb-20 pt-2">
+            <div class="bg-white/90 backdrop-blur-sm p-3 rounded-xl shadow-sm mb-3 text-sm flex gap-2 items-center justify-between z-10 absolute top-4 left-4 right-4 border border-white">
+                <div class="flex items-center gap-2 text-gray-500 truncate">
+                    <i class="fa-solid fa-location-dot text-red-400"></i>
+                    <span id="map-status">載入中...</span>
+                </div>
+                <button onclick="refreshMap()" class="text-blue-500 bg-blue-50 px-3 py-1.5 rounded-full font-bold whitespace-nowrap text-xs">重整</button>
+            </div>
+            <div id="osm-map" class="flex-1 w-full rounded-2xl overflow-hidden shadow-inner bg-gray-100 z-0"></div>
+        </div>
+
+        <div id="view-finance" class="hidden page-enter px-5 pt-4 pb-24 space-y-5">
+            <div class="bg-gray-800 rounded-3xl p-6 text-white shadow-xl shadow-gray-300 relative overflow-hidden">
+                <div class="absolute -right-6 -top-6 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                <div class="text-xs text-white/60 mb-1">本日支出 (JPY)</div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-2xl font-bold font-mono text-jp-accent">¥</span>
+                    <span class="text-5xl font-bold font-mono tracking-tight" id="daily-total-foreign">0</span>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white/10 text-sm text-white/60 flex justify-between items-center">
+                    <span class="font-mono">≈ HKD <span id="daily-total-home">0</span></span>
+                    <button onclick="openAddModal('expense')" class="bg-white text-gray-800 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm active:scale-95 transition">
+                        <i class="fa-solid fa-plus mr-1"></i> 記一筆
+                    </button>
+                </div>
+            </div>
+            <div id="expense-list" class="space-y-3"></div>
+        </div>
+
+        <div id="view-info" class="hidden page-enter px-5 pt-4 pb-24 space-y-4">
+             <div class="flex justify-between items-center mb-2">
+                <h2 class="text-lg font-bold text-jp-text border-l-4 border-jp-accent pl-3">旅人筆記</h2>
+                <button onclick="openAddModal('info')" class="text-jp-accent w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm border border-gray-100"><i class="fa-solid fa-plus text-sm"></i></button>
+            </div>
+            <div id="info-list" class="grid grid-cols-1 gap-4"></div>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-0 left-0 right-0 w-full glass z-40 flex justify-around items-end px-2 pb-6 pt-3 rounded-t-[2rem] shadow-[0_-5px_20px_rgba(0,0,0,0.03)]">
+        <button onclick="switchTab('itinerary')" class="nav-btn active flex flex-col items-center gap-1 w-16 transition-all duration-300">
+            <i class="fa-solid fa-calendar-day text-xl"></i>
+            <span class="text-[10px] font-bold">行程</span>
+        </button>
+        <button onclick="switchTab('map')" class="nav-btn text-gray-300 flex flex-col items-center gap-1 w-16 transition-all duration-300">
+            <i class="fa-solid fa-map text-xl"></i>
+            <span class="text-[10px] font-bold">地圖</span>
+        </button>
+        <button onclick="switchTab('finance')" class="nav-btn text-gray-300 flex flex-col items-center gap-1 w-16 transition-all duration-300">
+            <i class="fa-solid fa-wallet text-xl"></i>
+            <span class="text-[10px] font-bold">記帳</span>
+        </button>
+        <button onclick="openModal('converter')" class="nav-btn text-gray-300 flex flex-col items-center gap-1 w-16 transition-all duration-300">
+            <i class="fa-solid fa-calculator text-xl"></i>
+            <span class="text-[10px] font-bold">換算</span>
+        </button>
+    </nav>
+
+    <div id="modal-trip-info" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-[60] hidden flex flex-col justify-end">
+        <div class="bg-jp-bg w-full rounded-t-[2.5rem] p-6 pb-12 modal-enter max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold flex items-center gap-2 text-jp-text"><i class="fa-solid fa-circle-info text-blue-500"></i> 旅程資訊</h2>
+                <button onclick="closeModal('trip-info')" class="w-9 h-9 flex items-center justify-center bg-gray-100 rounded-full text-gray-400"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6 relative overflow-hidden">
+                <div class="absolute right-0 top-0 bg-yellow-100 text-yellow-700 text-xs font-bold px-3 py-1.5 rounded-bl-xl">住宿</div>
+                <h3 class="font-bold text-jp-text text-xl leading-tight mb-1">Hotel Wing International</h3>
+                <p class="text-sm text-gray-500 mb-4">Hakata Shinkansenguchi (博多新幹線口)</p>
+                
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-4">
+                    <div class="flex items-start gap-2 mb-3">
+                        <i class="fa-solid fa-location-dot text-jp-accent mt-1 text-sm"></i>
+                        <p id="hotel-address" class="text-sm text-gray-600 leading-relaxed flex-1">福岡市博多区博多駅東1-17-17<br><span class="text-xs text-gray-400">(從博多站筑紫口步行4分鐘，入口在筑紫口東側，沿博多駅東街直走)</span></p>
+                        <button onclick="copyText('hotel-address')" class="text-gray-400 hover:text-jp-accent p-1"><i class="fa-regular fa-copy text-lg"></i></button>
+                    </div>
+                    <a href="https://www.hotelwing.co.jp/hakata-shinkansen/" target="_blank" class="w-full bg-white border border-blue-200 text-blue-500 font-bold py-2 rounded-xl text-center text-xs block hover:bg-blue-50 transition">開啟官網 / 地圖</a>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-blue-50 rounded-xl p-3">
+                        <div class="text-[10px] text-blue-400 font-bold uppercase mb-1">Check-in</div>
+                        <div class="text-lg font-bold text-blue-600 font-mono">15:00</div>
+                    </div>
+                    <div class="bg-orange-50 rounded-xl p-3">
+                        <div class="text-[10px] text-orange-400 font-bold uppercase mb-1">Check-out</div>
+                        <div class="text-lg font-bold text-orange-600 font-mono">11:00</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-base font-bold text-gray-400 pl-2">航班資訊</h3>
+                
+                <div class="bg-white rounded-3xl p-0 shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div class="ticket-notch ticket-notch-l"></div>
+                    <div class="ticket-notch ticket-notch-r"></div>
+                    <div class="p-5 pb-3 flex justify-between items-center bg-gray-50/50">
+                        <div class="text-xs font-bold bg-sky-100 text-sky-600 px-3 py-1 rounded-full">去程</div>
+                        <div class="text-base font-bold text-gray-800 font-mono tracking-wider">UO638</div>
+                        <div class="text-xs text-gray-400 font-bold">2026/02/14 (六)</div>
+                    </div>
+                    <div class="px-6 py-5 flex justify-between items-center text-center">
+                        <div>
+                            <div class="text-3xl font-bold text-jp-text font-mono">HKG</div>
+                            <div class="text-sm text-gray-500 font-mono font-bold mt-1">12:50</div>
+                        </div>
+                        <div class="text-gray-300 text-sm flex flex-col items-center">
+                            <i class="fa-solid fa-plane text-sky-300 mb-1"></i>
+                            <div class="border-t-2 border-dashed border-gray-200 w-16"></div>
+                            <span class="text-[10px] mt-1 text-gray-400">3h 20m</span>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-jp-text font-mono">FUK</div>
+                            <div class="text-sm text-gray-500 font-mono font-bold mt-1">17:10</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl p-0 shadow-sm border border-gray-100 relative overflow-hidden">
+                    <div class="ticket-notch ticket-notch-l"></div>
+                    <div class="ticket-notch ticket-notch-r"></div>
+                    <div class="p-5 pb-3 flex justify-between items-center bg-gray-50/50">
+                        <div class="text-xs font-bold bg-pink-100 text-pink-600 px-3 py-1 rounded-full">回程</div>
+                        <div class="text-base font-bold text-gray-800 font-mono tracking-wider">UO669</div>
+                        <div class="text-xs text-gray-400 font-bold">2026/02/20 (五)</div>
+                    </div>
+                    <div class="px-6 py-5 flex justify-between items-center text-center">
+                        <div>
+                            <div class="text-3xl font-bold text-jp-text font-mono">FUK</div>
+                            <div class="text-sm text-gray-500 font-mono font-bold mt-1">16:05</div>
+                        </div>
+                        <div class="text-gray-300 text-sm flex flex-col items-center">
+                            <i class="fa-solid fa-plane fa-rotate-180 text-pink-300 mb-1"></i>
+                            <div class="border-t-2 border-dashed border-gray-200 w-16"></div>
+                            <span class="text-[10px] mt-1 text-gray-400">3h 10m</span>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-jp-text font-mono">HKG</div>
+                            <div class="text-sm text-gray-500 font-mono font-bold mt-1">19:15</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="detail-modal" class="fixed inset-0 bg-black/40 backdrop-blur-md z-50 hidden flex items-end sm:items-center justify-center">
+        <div class="bg-white w-full sm:w-[480px] rounded-t-[2.5rem] sm:rounded-[2.5rem] p-8 pb-10 modal-enter relative max-h-[85vh] overflow-y-auto no-scrollbar shadow-2xl">
+            <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-8"></div>
+            
+            <div class="flex items-start gap-5 mb-8">
+                <div id="detail-icon-bg" class="w-16 h-16 rounded-2xl flex-shrink-0 flex items-center justify-center text-3xl shadow-md text-white ring-4 ring-white">
+                    <i id="detail-icon" class="fa-solid"></i>
+                </div>
+                <div class="flex-1">
+                    <div id="detail-time" class="text-jp-accent text-sm font-bold font-mono mb-1 bg-orange-50 inline-block px-2 py-0.5 rounded-lg border border-orange-100"></div>
+                    <h2 id="detail-title" class="text-2xl font-bold text-jp-text leading-tight mb-2 mt-1"></h2>
+                    <div id="detail-loc-wrapper" class="text-sm text-gray-500 flex items-start gap-2 cursor-pointer hover:text-blue-600 transition group" onclick="copyAddress()">
+                        <i class="fa-solid fa-location-dot mt-1 text-red-400 group-hover:text-blue-500"></i>
+                        <span id="detail-loc" class="leading-snug"></span>
+                        <i class="fa-regular fa-copy ml-1 opacity-30 group-hover:opacity-100 mt-1"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <a id="btn-map" href="#" class="col-span-1 py-4 bg-white text-blue-600 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold active:scale-95 transition border-2 border-blue-100 hover:bg-blue-50 shadow-sm">
+                    <i class="fa-solid fa-map-location-dot text-lg"></i> Google Maps
+                </a>
+                <a id="btn-app-action" href="#" class="col-span-1 py-4 bg-white text-orange-600 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold active:scale-95 transition border-2 border-orange-100 hover:bg-orange-50 shadow-sm hidden">
+                    <i class="fa-solid fa-utensils text-lg"></i> Tabelog
+                </a>
+                <a id="btn-booking" href="#" class="col-span-2 py-4 bg-gray-800 text-white rounded-2xl flex items-center justify-center gap-2 text-sm font-bold shadow-lg active:scale-95 transition hidden hover:bg-gray-700">
+                    <i class="fa-solid fa-ticket text-lg"></i> 開啟預訂 / 憑證 <span id="booking-ref-display" class="font-mono bg-white/20 px-2 py-0.5 rounded text-xs ml-1"></span>
+                </a>
+            </div>
+
+            <div class="bg-jp-bg p-6 rounded-3xl border border-gray-100 mb-8 shadow-inner">
+                <div class="text-xs text-gray-400 mb-3 font-bold uppercase tracking-wider flex justify-between items-center">
+                    <span><i class="fa-solid fa-circle-info mr-1"></i> 詳細攻略 & 筆記</span>
+                    <i class="fa-solid fa-pen text-gray-300 cursor-pointer p-2 hover:bg-white rounded-full"></i>
+                </div>
+                <div id="detail-note" class="text-base text-gray-700 leading-relaxed whitespace-pre-line font-medium"></div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="closeDetailModal()" class="flex-1 py-4 text-gray-500 text-base font-bold rounded-2xl bg-gray-100 hover:bg-gray-200 transition">關閉</button>
+                <button onclick="deleteFromDetail()" class="flex-1 py-4 text-red-500 text-base font-bold rounded-2xl bg-red-50 hover:bg-red-100 transition"><i class="fa-solid fa-trash-can mr-2"></i> 刪除</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-safety" class="fixed inset-0 bg-red-50/95 backdrop-blur-sm z-[60] hidden flex flex-col justify-end">
+        <div class="bg-white w-full rounded-t-[2.5rem] p-8 pb-12 modal-enter shadow-[0_-10px_60px_rgba(239,68,68,0.2)]">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold flex items-center gap-3 text-red-500"><i class="fa-solid fa-shield-heart text-2xl"></i> 安全守護</h2>
+                <button onclick="closeModal('safety')" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-400"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <button id="siren-btn" onclick="toggleSiren()" class="w-full py-8 bg-white border-4 border-red-100 rounded-3xl flex flex-col items-center justify-center text-red-500 font-bold mb-6 shadow-sm active:scale-[0.98] transition">
+                <i class="fa-solid fa-bullhorn text-4xl mb-3"></i>
+                <span id="siren-text" class="text-lg">啟動防狼警報</span>
+            </button>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button onclick="sendWhatsAppSOS()" class="bg-[#25D366] text-white py-5 rounded-2xl font-bold flex flex-col items-center justify-center gap-1 shadow-lg shadow-green-100 active:scale-95 transition">
+                    <i class="fa-brands fa-whatsapp text-3xl"></i> <span class="text-sm">發送定位</span>
+                </button>
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                    <label class="text-xs text-gray-400 font-bold block mb-2">緊急聯絡人</label>
+                    <div class="flex gap-1">
+                        <input type="tel" id="safety-contact" class="w-full bg-white px-3 py-2 rounded-xl text-base outline-none border border-gray-200" placeholder="電話號碼" onchange="saveContact()">
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
+                <button onclick="openNearby('police')" class="text-sm font-bold py-4 bg-blue-50 text-blue-500 rounded-2xl hover:bg-blue-100 transition"><i class="fa-solid fa-building-shield mb-2 block text-xl"></i>派出所</button>
+                <button onclick="openNearby('hospital')" class="text-sm font-bold py-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 transition"><i class="fa-solid fa-hospital mb-2 block text-xl"></i>醫院</button>
+                <button onclick="openNearby('convenience_store')" class="text-sm font-bold py-4 bg-orange-50 text-orange-500 rounded-2xl hover:bg-orange-100 transition"><i class="fa-solid fa-store mb-2 block text-xl"></i>便利店</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-taxi" class="fixed inset-0 bg-jp-text z-[70] hidden flex flex-col items-center justify-center p-6 text-center page-enter" onclick="closeModal('taxi')">
+        <div class="bg-white text-black p-10 rounded-2xl w-full max-w-sm shadow-2xl transform rotate-1">
+            <h2 class="text-3xl font-bold mb-6 border-b-4 border-black pb-4">ホテルへお願いします</h2>
+            <p class="text-2xl font-bold mb-6 leading-snug">Hotel Wing International<br>Hakata Shinkansenguchi</p>
+            <p class="text-2xl font-bold bg-yellow-100 p-4 rounded-xl leading-relaxed select-all">福岡市博多区博多駅東<br>1-17-17</p>
+        </div>
+        <div class="mt-10 text-white/50 text-sm">點擊任意處關閉</div>
+    </div>
+
+    <div id="modal-converter" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-center justify-center px-6">
+        <div class="bg-white w-full max-w-xs rounded-[2rem] p-8 page-enter shadow-2xl relative">
+            <button onclick="closeModal('converter')" class="absolute top-5 right-5 w-8 h-8 flex items-center justify-center bg-gray-50 rounded-full text-gray-300"><i class="fa-solid fa-xmark"></i></button>
+            <h3 class="font-bold mb-6 text-jp-text text-center text-lg">匯率換算</h3>
+            <div class="space-y-4">
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 flex items-center"><span class="text-gray-400 text-xs font-bold mr-3 w-8">JPY</span><input type="number" id="conv-foreign" class="bg-transparent text-3xl font-bold w-full outline-none text-jp-text font-mono" placeholder="0" oninput="convertCurrency('foreign')"></div>
+                <div class="flex justify-center -my-6 relative z-10"><i class="fa-solid fa-arrow-down-up text-gray-300 text-sm bg-white p-2 rounded-full border border-gray-100 shadow-sm"></i></div>
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 flex items-center"><span class="text-gray-400 text-xs font-bold mr-3 w-8">HKD</span><input type="number" id="conv-home" class="bg-transparent text-3xl font-bold w-full outline-none text-gray-500 font-mono" placeholder="0" oninput="convertCurrency('home')"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-generic" class="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 hidden flex justify-end">
+        <div class="bg-jp-bg w-full max-w-md h-full shadow-2xl flex flex-col modal-enter rounded-l-[2rem] overflow-hidden">
+            <div class="p-6 bg-white flex justify-between items-center shadow-sm z-10">
+                <h2 id="generic-title" class="text-xl font-bold flex items-center gap-3 text-jp-text">清單</h2>
+                <button onclick="closeGenericModal()" class="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-full text-gray-400"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 bg-gray-50 border-b border-gray-100 flex gap-3">
+                <input type="text" id="generic-input" class="flex-1 bg-white rounded-xl px-4 py-3 outline-none text-base shadow-sm border border-gray-200" placeholder="新增項目...">
+                <button onclick="addGenericItem()" class="bg-jp-text text-white w-12 rounded-xl shadow-sm"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            <ul id="generic-list" class="flex-1 overflow-y-auto p-6 space-y-3 pb-12"></ul>
+        </div>
+    </div>
+
+    <div id="add-modal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center">
+        <div class="bg-white w-full sm:w-[500px] rounded-t-[2rem] sm:rounded-[2rem] p-8 pb-10 page-enter relative">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="font-bold text-xl text-jp-text">新增項目</h3>
+                <button onclick="closeAddModal()" class="w-10 h-10 bg-gray-50 rounded-full text-gray-300"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form id="add-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+                <div id="modal-content"></div>
+                <button type="submit" class="w-full bg-jp-text text-white font-bold py-4 rounded-2xl shadow-lg mt-6 active:scale-[0.98] transition text-base">確認儲存</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // CONFIG
+        const CONFIG = {
+            key: "fukuoka_trip_2026_final_v8_rich_content",
+            dates: ["2026-02-14", "2026-02-15", "2026-02-16", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20"],
+            rate: 0.052,
+            hotel: { name: "Hotel Wing International", coords: [33.5910, 130.4225] },
+            defaultItinerary: [
+                // Day 1
+                { id: 101, date: "2026-02-14", time: "17:10", type: "flight", title: "抵達福岡機場 (UO638)", loc: "Fukuoka Airport", lat: 33.5859, lng: 130.4446, bookingRef: "UO638", note: "【交通指示】\n1. 入境後直走約50米，前往「2號巴士乘車處」(右手邊)。\n2. 搭乘「西鐵巴士 (往博多駅・天神方向)」。\n3. 在「博多駅筑紫口」下車 (約第3站)。\n費用：¥310 (IC卡/現金)。時間：約20分鐘。\n⚠️ 如果迷路，問工作人員 'Bus to Hakata Station?'" },
+                { id: 102, date: "2026-02-14", time: "18:20", type: "other", title: "Check-in", loc: "Hotel Wing International", lat: 33.5910, lng: 130.4225, link: "https://www.hotelwing.co.jp/hakata-shinkansen/", note: "地址：福岡市博多区博多駅東1-17-17\n【步行指引】\n下車後，入口在筑紫口東側，沿著博多駅東街直走，過一個小路口後右手邊即見飯店招牌 (約4分鐘)。" },
+                { id: 103, date: "2026-02-14", time: "18:45", type: "shopping", title: "住吉酒販 (角打體驗)", loc: "博多 Deitos Annex 1F", lat: 33.5905, lng: 130.4195, note: "【交通】從飯店走回博多站筑紫口，進站後跟隨 'Deitos Annex' 標誌，直走100米左手邊。\n\n【體驗】換購「花札」代幣 (¥500起) 兌換酒與小菜。\n💡紀念品：九州限定清酒瓶。" },
+                { id: 104, date: "2026-02-14", time: "19:30", type: "food", title: "博多牛腸鍋 飯山", loc: "博多 Deitos 1F", lat: 33.5905, lng: 130.4195, link: "https://resy.com/cities/fukuoka-japan/venues/hakata-motsunabe-ooyama-deitos-hakata", note: "【交通】從住吉酒販出來，沿商場走50米，右手邊「博多麵街道」下樓梯。\n\n🍽️ 必點：味噌牛腸鍋、生啤酒。\n💰 預算：¥2,500。" },
+                { id: 105, date: "2026-02-14", time: "21:00", type: "food", title: "茶酒沙龍 Yorozu", loc: "赤坂2-3-32", lat: 33.5865, lng: 130.3940, bookingRef: "已預約", link: "https://autoreserve.com/zh-tw/restaurants/QrFYAjJWeRj4e6cev4nr", note: "【交通】地鐵空港線「赤坂站」2號出口，出站左轉直走300米。\n\n🍽️ 必點：茶酒套餐 (Tea Cocktail Course)。\n💰 預算：¥5,000。" },
+                
+                // Day 2
+                { id: 201, date: "2026-02-15", time: "08:30", type: "food", title: "博多牛舌早餐 Tandoya", loc: "博多一番街 B1", lat: 33.5898, lng: 130.4200, note: "【交通】博多站筑紫口進站，跟隨「博多一番街」標誌下樓到B1。\n\n🍽️ 必點：牛舌早餐定食 (¥800)。" },
+                { id: 202, date: "2026-02-15", time: "09:30", type: "transport", title: "前往城島酒藏開倉", loc: "JR博多站 -> 荒木站", note: "路線：JR鹿兒島本線 (快速) -> 「荒木站」 (約30分, ¥1,130)。\n轉乘：出站右手邊搭免費接駁巴士至會場。" },
+                { id: 203, date: "2026-02-15", time: "11:00", type: "sightseeing", title: "城島酒藏開倉祭", loc: "城島町民之森公園", lat: 33.2750, lng: 130.4700, link: "https://welcome-kurume.com/tw/events/detail/aafc88d1-e520-4a74-849f-a2f54b58a68f", note: "【攻略】主會場買試飲券，搭巡迴巴士至酒造 (推薦: 比翼鶴酒造)。\n🍽️ 必吃：鰻魚蒸籠飯。\n💡紀念品：限量新酒瓶。" },
+                { id: 204, date: "2026-02-15", time: "16:30", type: "shopping", title: "LOPIA 超市 博多店", loc: "Yodobashi Camera 4F", lat: 33.5885, lng: 130.4220, note: "【交通】博多站筑紫口右轉走100米至Yodobashi，電梯上4F。\n⚠️ 注意：只收現金！請準備足夠現金。" },
+                { id: 205, date: "2026-02-15", time: "18:30", type: "food", title: "博多雞皮大臣", loc: "KITTE 博多 B1", lat: 33.5890, lng: 130.4185, note: "【交通】博多站博多口左側 KITTE 大樓 B1。\n🍽️ 必點：醬汁雞皮、Highball。" },
+
+                // Day 3
+                { id: 301, date: "2026-02-16", time: "08:45", type: "food", title: "il FORNO del MIGNON", loc: "博多站中央改札口", lat: 33.5900, lng: 130.4205, note: "必買：現烤迷你可頌，配飯店咖啡。\n💰 預算：¥500。" },
+                { id: 302, date: "2026-02-16", time: "09:30", type: "transport", title: "巴士前往太宰府", loc: "博多巴士總站 11號月台", note: "【地點】博多口左側巴士總站 1F。\n路線：搭乘「旅人號 (Tabito)」 巴士 (¥610，IC卡可)。" },
+                { id: 303, date: "2026-02-16", time: "10:30", type: "sightseeing", title: "太宰府天滿宮 & 竈門神社", loc: "太宰府市", lat: 33.5215, lng: 130.5349, note: "【竈門神社交通】西鐵太宰府站前搭社區巴士「Mahoroba」(內山線) (¥100)。\n💡紀念品：天滿宮御守、緣結び守。" },
+                { id: 304, date: "2026-02-16", time: "12:30", type: "food", title: "茶和々 (Sawawa)", loc: "太宰府參道", lat: 33.5200, lng: 130.5335, note: "🍽️ 必吃：極濃抹茶雪糕 (¥800)。" },
+                { id: 305, date: "2026-02-16", time: "14:30", type: "other", title: "二日市溫泉「博多湯」", loc: "二日市", lat: 33.4930, lng: 130.5250, note: "【交通】西鐵二日市站西口出，右轉沿湯町街走12分。\n費用：入浴料¥350，毛巾¥200。\n古湯放鬆體驗。" },
+                { id: 306, date: "2026-02-16", time: "19:00", type: "food", title: "旭軒 駅前本店", loc: "博多駅前2-15-22", lat: 33.5905, lng: 130.4170, note: "🍽️ 必點：一口煎餃、炸雞翅。\n💰 預算：¥1,500。" },
+
+                // Day 4
+                { id: 401, date: "2026-02-17", time: "08:15", type: "food", title: "因幡烏龍麵", loc: "博多 Deitos 1F 麵街道", lat: 33.5905, lng: 130.4195, note: "🍽️ 必點：牛蒡天婦羅烏龍麵。" },
+                { id: 402, date: "2026-02-17", time: "09:00", type: "transport", title: "前往麒麟啤酒工廠", loc: "甘木鐵道 太刀洗站", note: "路線：JR到「基山站」 -> 轉乘甘木鐵道至「太刀洗站」。\n⚠️ 甘木鐵道只收現金 (¥330)，請備零錢。" },
+                { id: 403, date: "2026-02-17", time: "10:30", type: "sightseeing", title: "麒麟啤酒福岡工廠", loc: "朝倉市馬田3601", lat: 33.3900, lng: 130.6100, bookingRef: "需預約", link: "https://kirinfactory.my.salesforce-sites.com/ensp/WebSelectEnSp", note: "費用：¥500 (含見學+試飲)。需預約。\n💡紀念品：啤酒杯。" },
+                { id: 404, date: "2026-02-17", time: "12:00", type: "food", title: "Kirin Beer Farm", loc: "工廠園區內", lat: 33.3900, lng: 130.6100, note: "🍽️ 必吃：成吉思汗烤肉 (羊肉)。" },
+                { id: 405, date: "2026-02-17", time: "15:00", type: "sightseeing", title: "南藏院 (涅槃佛)", loc: "篠栗町", lat: 33.6190, lng: 130.5730, note: "【交通】太刀洗 -> 基山 -> JR博多 (轉篠栗線) -> 城戶南藏院前站。\n世界最大青銅釋迦涅槃佛。參拜費¥300。" },
+                { id: 406, date: "2026-02-17", time: "18:30", type: "food", title: "海風土 (Seafood)", loc: "博多駅東2-4-17", lat: 33.5908, lng: 130.4230, note: "【交通】博多站筑紫口右轉，沿博多駅東街走200米，過路口左手邊。\n🍽️ 必點：海之寶箱生魚片(500円)、胡麻鯖魚。" },
+
+                // Day 5
+                { id: 501, date: "2026-02-18", time: "07:30", type: "food", title: "東筑軒 雞肉飯便當", loc: "博多站中央改札口", lat: 33.5900, lng: 130.4205, note: "必買：東筑軒 かしわめし (¥1,000)。車上享用。" },
+                { id: 502, date: "2026-02-18", time: "08:00", type: "transport", title: "特急 Sonic 往別府", loc: "JR博多站", bookingRef: "Sonic", note: "車程約2小時。請事先買票或用IC卡 (¥4,000起)。" },
+                { id: 503, date: "2026-02-18", time: "10:20", type: "sightseeing", title: "大分香水博物館", loc: "別府市北石垣48-1", lat: 33.3080, lng: 131.4900, note: "【交通】別府站西口搭龜之井巴士(2/5/7/41號)至「別府大學下」。\n調香體驗 ¥2,500。" },
+                { id: 504, date: "2026-02-18", time: "13:00", type: "food", title: "Beppu Brewery", loc: "別府站前", lat: 33.2790, lng: 131.5000, note: "【交通】別府站前左轉沿駅前街走5分。\n🍽️ 必點：啤酒試飲組、炸雞天婦羅。" },
+                { id: 505, date: "2026-02-18", time: "15:00", type: "other", title: "竹瓦溫泉 (砂湯)", loc: "別府市元町16-23", lat: 33.2780, lng: 131.5050, note: "【交通】沿元町街直走10分。\n體驗：熱砂排毒。費用 ¥1,500 (含浴衣)。" },
+                { id: 506, date: "2026-02-18", time: "19:30", type: "food", title: "博多一雙 拉麵", loc: "博多駅東3-1-6", lat: 33.5895, lng: 130.4250, note: "【交通】博多站筑紫口右轉，沿東3街走5分。\n🍽️ 必點：糖心蛋拉麵 (味玉ラーメン)。" },
+
+                // Day 6
+                { id: 601, date: "2026-02-19", time: "09:30", type: "transport", title: "前往明太子工坊", loc: "JR博多站 -> 吉塚站", note: "JR鹿兒島本線 (1站, ¥200)，東口出站走13分鐘。" },
+                { id: 602, date: "2026-02-19", time: "10:00", type: "sightseeing", title: "Haku Haku 明太子手作", loc: "吉塚", lat: 33.6080, lng: 130.4280, bookingRef: "需預約", link: "https://www.hakuhaku.com/workshop/", note: "費用：約¥2,200。\n內容：調製專屬明太子。" },
+                { id: 603, date: "2026-02-19", time: "11:45", type: "shopping", title: "市川香舖 (線香)", loc: "中洲川端商店街", lat: 33.5930, lng: 130.4080, note: "【交通】吉塚回博多 -> 地鐵「中洲川端站」5號出口。\n挑選日本製高級線香（白檀/沈香）。" },
+                { id: 604, date: "2026-02-19", time: "12:30", type: "food", title: "燒肉 BAKURO 大名店", loc: "大名", lat: 33.5875, lng: 130.3950, note: "【交通】地鐵「赤坂站」出站走5分。\n🍽️ 必點：午間燒肉套餐 (CP值高)。" },
+                { id: 605, date: "2026-02-19", time: "14:00", type: "shopping", title: "AEON Shoppers 福岡店", loc: "天神", lat: 33.5920, lng: 130.3980, note: "【交通】沿天神街直走10-12分。\n大型超市，可退稅。" },
+                { id: 606, date: "2026-02-19", time: "16:30", type: "sightseeing", title: "MY ONLY FRAGRANCE", loc: "大名1-1-35", lat: 33.5860, lng: 130.3960, bookingRef: "需預約", link: "https://myonlyfragrance.com/reservation/", note: "製作專屬香水體驗。\n預算：¥5,000起。" },
+                { id: 607, date: "2026-02-19", time: "18:00", type: "food", title: "Fukuoka Craft Brewing", loc: "大名1-11-4", lat: 33.5865, lng: 130.3955, note: "工藝啤酒吧，試飲體驗。" },
+                { id: 608, date: "2026-02-19", time: "19:00", type: "food", title: "烏龍麵 和助", loc: "天神", lat: 33.5900, lng: 130.3990, note: "🍽️ 必點：牛蒡天婦羅烏龍麵。" },
+
+                // Day 7
+                { id: 701, date: "2026-02-20", time: "10:00", type: "food", title: "Nana's Green Tea", loc: "JR博多城 Amu Plaza", lat: 33.5898, lng: 130.4207, note: "Check-out後寄放行李。\n🍽️ 必吃：抹茶生巧克力芭菲。" },
+                { id: 702, date: "2026-02-20", time: "11:00", type: "sightseeing", title: "石藏酒造 博多百年藏", loc: "博多区堅粕1-30-1", lat: 33.6020, lng: 130.4220, link: "https://www.ishikura-shuzou.co.jp/", note: "【交通】博多口左轉沿堅粕街直走20分 (或搭巴士)。\n免費參觀，試飲¥300起。" },
+                { id: 703, date: "2026-02-20", time: "12:15", type: "food", title: "鮨 割烹 やま中", loc: "JR博多城 9F", lat: 33.5898, lng: 130.4207, bookingRef: "務必預約", link: "https://tabelog.com/en/fukuoka/A4001/A400101/40026334/", note: "🍽️ 必吃：特選握壽司套餐。\n💰 預算：¥4,000-¥6,000。\n⚠️ 務必預約 12:15。" },
+                { id: 704, date: "2026-02-20", time: "14:00", type: "transport", title: "前往機場", loc: "博多巴士總站 11號月台", note: "搭乘「福岡機場國際線 直達巴士」(¥310)。" },
+                { id: 705, date: "2026-02-20", time: "14:30", type: "flight", title: "抵達機場 (UO669)", loc: "Fukuoka Airport", bookingRef: "UO669", note: "辦理登機，起飛時間 16:05。" }
+            ]
+        };
+
+        const CATS = {
+            sightseeing: { label: "景點", icon: "fa-camera", color: "text-green-600", bg: "bg-green-100" },
+            transport: { label: "交通", icon: "fa-train-subway", color: "text-blue-600", bg: "bg-blue-100" },
+            flight: { label: "航班", icon: "fa-plane-up", color: "text-sky-600", bg: "bg-sky-100" },
+            food: { label: "美食", icon: "fa-utensils", color: "text-orange-600", bg: "bg-orange-100" },
+            shopping: { label: "購物", icon: "fa-bag-shopping", color: "text-pink-600", bg: "bg-pink-100" },
+            other: { label: "其他", icon: "fa-star", color: "text-purple-600", bg: "bg-purple-100" }
+        };
+
+        let db = { itinerary: [], expenses: [], shopping: [], todo: [], luggage: [], info: [], settings: { safetyContact: "" } };
+        let state = { date: CONFIG.dates[0], tab: 'itinerary', currentList: null, currentItem: null };
+        let map = null, markers = [];
+        let weatherCache = {}; 
+
+        // --- INIT ---
+        function init() {
+            const saved = localStorage.getItem(CONFIG.key);
+            if (saved) db = JSON.parse(saved);
+            else {
+                db.itinerary = CONFIG.defaultItinerary;
+                db.luggage = ["IC卡", "現金", "護照", "網卡", "充電器", "防狼警報"].map((t,i)=>({id:i, text:t, done:false}));
+            }
+            if(!db.settings) db.settings = { safetyContact: "" };
+            if(db.settings.safetyContact) document.getElementById('safety-contact').value = db.settings.safetyContact;
+
+            renderDateSlider();
+            renderAll();
+            document.getElementById('rate-display').innerText = CONFIG.rate;
+            fetchDailyWeather(state.date);
+        }
+
+        function save() { localStorage.setItem(CONFIG.key, JSON.stringify(db)); renderAll(); }
+        function renderAll() { renderItinerary(); renderExpenses(); renderInfo(); updateBadges(); }
+
+        // --- RENDER ITINERARY ---
+        function renderDateSlider() {
+            const el = document.getElementById('date-slider');
+            el.innerHTML = CONFIG.dates.map(d => {
+                const dateObj = new Date(d);
+                const day = dateObj.getDate();
+                const week = dateObj.toLocaleDateString('zh-HK',{weekday:'short'});
+                const active = d === state.date ? "bg-jp-text text-white shadow-md scale-105" : "bg-white text-gray-400 border border-gray-100";
+                return `<button onclick="setDate('${d}')" class="flex-shrink-0 flex flex-col items-center justify-center w-12 h-14 rounded-xl transition-all duration-200 ${active}">
+                    <span class="text-[9px] opacity-80">${week}</span><span class="text-lg font-bold font-mono leading-none">${day}</span>
+                </button>`;
+            }).join('');
+        }
+        function setDate(d) { 
+            state.date = d; 
+            renderDateSlider(); 
+            renderItinerary(); 
+            renderExpenses(); 
+            updateMap();
+            fetchDailyWeather(d);
+        }
+
+        function renderItinerary() {
+            const list = document.getElementById('itinerary-list');
+            const items = db.itinerary.filter(i => i.date === state.date).sort((a,b) => a.time.localeCompare(b.time));
+            
+            if(items.length === 0) { list.innerHTML = `<div class="text-center py-20 opacity-30"><i class="fa-solid fa-mug-hot text-4xl mb-2"></i><div class="text-xs">本日無行程</div></div>`; return; }
+
+            list.innerHTML = items.map((i, index) => {
+                const cat = CATS[i.type] || CATS.other;
+                const isLast = index === items.length - 1 ? 'last-item' : '';
+                return `
+                <div onclick="openDetail(${i.id})" class="relative pl-20 py-2.5 group cursor-pointer ${isLast}">
+                    <div class="timeline-line"></div>
+                    
+                    <div class="absolute left-0 top-3 w-14 text-right">
+                        <div class="text-sm font-bold font-mono text-gray-500">${i.time}</div>
+                    </div>
+
+                    <div class="absolute left-[4.3rem] top-3.5 w-4 h-4 rounded-full border-2 border-white ${cat.bg} z-10 shadow-sm flex items-center justify-center">
+                        <div class="w-1.5 h-1.5 rounded-full ${cat.color.replace('text-', 'bg-')}"></div>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.03)] border border-transparent hover:border-gray-200 transition active:scale-[0.99] flex justify-between items-center gap-3">
+                        <div class="flex-1 min-w-0">
+                            <h3 class="font-bold text-jp-text text-lg truncate leading-tight mb-1">${i.title}</h3>
+                            <div class="flex items-center gap-2 text-xs text-gray-400">
+                                <span class="truncate max-w-[140px]"><i class="fa-solid fa-location-dot mr-1 opacity-60"></i>${i.loc || '未設定'}</span>
+                                ${i.bookingRef ? `<span class="bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded flex-shrink-0 font-mono text-[10px]">${i.bookingRef}</span>` : ''}
+                            </div>
+                        </div>
+                        
+                        <div id="weather-${i.id}" class="flex flex-col items-end justify-center w-14 border-l border-gray-100 pl-3 min-h-[40px] text-gray-300">
+                             <div class="w-2 h-2 bg-gray-100 rounded-full animate-pulse"></div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            if(weatherCache[state.date]) updateWeatherUI(state.date);
+        }
+
+        // --- WEATHER SYSTEM ---
+        async function fetchDailyWeather(dateStr) {
+            if(weatherCache[dateStr]) { updateWeatherUI(dateStr); return; }
+
+            const targetDate = new Date(dateStr);
+            const now = new Date();
+            const diffDays = Math.ceil((targetDate - now) / (1000 * 60 * 60 * 24));
+            
+            const lat = 33.59, lng = 130.42;
+            let url = "", isHistorical = false;
+            const params = "&hourly=temperature_2m,weathercode,relative_humidity_2m&timezone=Asia%2FTokyo";
+
+            if (diffDays > 10) {
+                isHistorical = true;
+                const refDate = dateStr.replace('2026', '2024'); 
+                url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${refDate}&end_date=${refDate}${params}`;
+            } else {
+                url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&start_date=${dateStr}&end_date=${dateStr}${params}`;
+            }
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                if(data.hourly) {
+                    weatherCache[dateStr] = {
+                        isHistorical: isHistorical,
+                        hourly: data.hourly
+                    };
+                    updateWeatherUI(dateStr);
+                }
+            } catch(e) { console.error("Weather fetch failed", e); }
+        }
+
+        function updateWeatherUI(dateStr) {
+            if (dateStr !== state.date) return;
+            const data = weatherCache[dateStr];
+            if (!data) return;
+
+            const notice = document.getElementById('weather-info-bar');
+            if(data.isHistorical) notice.classList.remove('hidden'); else notice.classList.add('hidden');
+
+            const items = db.itinerary.filter(i => i.date === state.date);
+            items.forEach(i => {
+                const el = document.getElementById(`weather-${i.id}`);
+                if (!el) return;
+
+                const hour = parseInt(i.time.split(':')[0]);
+                if (isNaN(hour)) return;
+
+                const temp = Math.round(data.hourly.temperature_2m[hour]);
+                const code = data.hourly.weathercode[hour];
+                const humid = data.hourly.relative_humidity_2m ? Math.round(data.hourly.relative_humidity_2m[hour]) : '--';
+                
+                let icon = "fa-cloud", color = "text-gray-400";
+                
+                if (code === 0) { icon = "fa-sun"; color = "text-orange-400"; }
+                else if (code <= 3) { icon = "fa-cloud-sun"; color = "text-orange-300"; }
+                else if (code >= 45 && code <= 48) { icon = "fa-smog"; color = "text-gray-400"; }
+                else if (code >= 51 && code <= 67) { icon = "fa-cloud-rain"; color = "text-blue-400"; }
+                else if (code >= 71 && code <= 77) { icon = "fa-snowflake"; color = "text-sky-300"; }
+                else if (code >= 80) { icon = "fa-cloud-bolt"; color = "text-purple-400"; }
+
+                el.innerHTML = `
+                    <i class="fa-solid ${icon} ${color} text-lg mb-0.5 weather-fade-in"></i>
+                    <span class="text-xs font-bold text-jp-text leading-none mb-0.5">${temp}°C</span>
+                    <span class="text-[9px] text-gray-400 font-mono leading-none"><i class="fa-solid fa-droplet text-[8px] mr-0.5 opacity-70"></i>${humid}%</span>
+                `;
+            });
+        }
+
+        // --- MODAL FUNCTIONS ---
+        function openTripInfo() { document.getElementById('modal-trip-info').classList.remove('hidden'); }
+
+        function openDetail(id) {
+            const item = db.itinerary.find(i => i.id === id);
+            if(!item) return;
+            state.currentItem = item;
+            const cat = CATS[item.type] || CATS.other;
+
+            document.getElementById('detail-title').innerText = item.title;
+            document.getElementById('detail-time').innerText = `${item.date} · ${item.time}`;
+            document.getElementById('detail-icon').className = `fa-solid ${cat.icon}`;
+            document.getElementById('detail-icon-bg').className = `w-14 h-14 rounded-2xl flex-shrink-0 flex items-center justify-center text-2xl shadow-sm text-white ${cat.color.replace('text-', 'bg-')}`;
+            document.getElementById('detail-loc').innerText = item.loc || "未設定地點";
+            document.getElementById('detail-note').innerText = item.note || "（無備註）";
+
+            const mapBtn = document.getElementById('btn-map');
+            const query = item.loc || item.title;
+            const latLng = item.lat ? `${item.lat},${item.lng}` : null;
+            mapBtn.href = latLng ? `https://www.google.com/maps/search/?api=1&query=${latLng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query + " Fukuoka")}`;
+
+            const appBtn = document.getElementById('btn-app-action');
+            if (item.type === 'food') {
+                appBtn.classList.remove('hidden');
+                appBtn.innerHTML = '<i class="fa-solid fa-utensils"></i> Tabelog';
+                appBtn.className = "col-span-1 py-3 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center gap-2 text-xs font-bold active:scale-95 transition border border-orange-100";
+                appBtn.href = item.link && item.link.includes('tabelog') ? item.link : `https://tabelog.com/rstLst/?vs=1&sa=&sk=${encodeURIComponent(item.title)}`;
+            } else if (item.type === 'sightseeing' || item.type === 'other') {
+                appBtn.classList.remove('hidden');
+                appBtn.innerHTML = '<i class="fa-solid fa-ticket"></i> KKday';
+                appBtn.className = "col-span-1 py-3 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center gap-2 text-xs font-bold active:scale-95 transition border border-teal-100";
+                appBtn.href = `https://www.kkday.com/zh-hk/product/product_list?keyword=${encodeURIComponent(item.title)}`;
+            } else {
+                appBtn.classList.add('hidden');
+            }
+
+            const bkBtn = document.getElementById('btn-booking');
+            if (item.bookingRef || (item.link && !item.link.includes('tabelog'))) {
+                bkBtn.classList.remove('hidden');
+                bkBtn.className = appBtn.classList.contains('hidden') ? "col-span-2 py-3 bg-gray-800 text-white rounded-xl flex items-center justify-center gap-2 text-xs font-bold shadow-md active:scale-95 transition" : "col-span-2 py-3 bg-gray-800 text-white rounded-xl flex items-center justify-center gap-2 text-xs font-bold shadow-md active:scale-95 transition mt-0";
+                document.getElementById('booking-ref-display').innerText = item.bookingRef || "";
+                bkBtn.href = item.link || "#";
+            } else {
+                bkBtn.classList.add('hidden');
+            }
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function copyAddress() {
+            const txt = document.getElementById('detail-loc').innerText;
+            if(txt) { navigator.clipboard.writeText(txt); alert("地址已複製"); }
+        }
+        function copyText(id) {
+            const txt = document.getElementById(id).innerText;
+            if(txt) { navigator.clipboard.writeText(txt); alert("複製成功！"); }
+        }
+        function closeModal(t) { document.getElementById(`modal-${t}`).classList.add('hidden'); }
+        function deleteFromDetail() { if(confirm("確定刪除？")) { db.itinerary = db.itinerary.filter(i => i.id !== state.currentItem.id); save(); closeDetailModal(); } }
+
+        // --- MAP LOGIC ---
+        function updateMap() {
+            if(state.tab !== 'map') return;
+            if(!map) { map = L.map('osm-map', { zoomControl: false }).setView(CONFIG.hotel.coords, 13); L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { attribution: '' }).addTo(map); }
+            map.invalidateSize();
+            markers.forEach(m => map.removeLayer(m)); markers = [];
+            const items = db.itinerary.filter(i => i.date === state.date && i.lat);
+            
+            L.marker(CONFIG.hotel.coords, {icon: L.divIcon({ html: '<div class="w-8 h-8 bg-gray-800 text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white text-xs"><i class="fa-solid fa-bed"></i></div>', className: '' })}).addTo(map).bindPopup("Hotel");
+            
+            items.forEach(i => { 
+                const cat = CATS[i.type] || CATS.other; 
+                const bg = cat.color.replace('text-', 'bg-');
+                const m = L.marker([i.lat, i.lng], {icon: L.divIcon({ html: `<div class="w-8 h-8 ${bg} text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white text-xs"><i class="fa-solid ${cat.icon}"></i></div>`, className: '' })}).addTo(map).bindPopup(i.title); 
+                markers.push(m); 
+            });
+            
+            if(items.length > 0) {
+                 const group = new L.featureGroup([L.marker(CONFIG.hotel.coords), ...markers]);
+                 map.fitBounds(group.getBounds().pad(0.15));
+            }
+        }
+        function refreshMap() { setTimeout(updateMap, 300); }
+
+        // --- EXPENSES ---
+        function renderExpenses() {
+            const list = document.getElementById('expense-list');
+            const items = db.expenses.filter(i => i.date === state.date);
+            let totalF = 0;
+            list.innerHTML = items.map(i => {
+                const amt = parseFloat(i.amount);
+                if(i.curr === 'JPY') totalF += amt; 
+                return `<div class="bg-white px-4 py-3 rounded-xl flex justify-between items-center shadow-sm border border-gray-50"><span class="text-sm font-bold text-jp-text">${i.desc}</span><div class="flex items-center gap-3"><span class="font-bold text-jp-text font-mono">¥ ${amt.toLocaleString()}</span><button onclick="deleteExpense(${i.id})" class="text-gray-300 hover:text-red-400"><i class="fa-solid fa-xmark"></i></button></div></div>`;
+            }).join('');
+            document.getElementById('daily-total-foreign').innerText = totalF.toLocaleString();
+            document.getElementById('daily-total-home').innerText = Math.round(totalF * CONFIG.rate).toLocaleString();
+        }
+        function deleteExpense(id) { db.expenses = db.expenses.filter(i => i.id !== id); save(); }
+
+        // --- INFO & LISTS ---
+        function renderInfo() {
+            document.getElementById('info-list').innerHTML = db.info.map(i => `
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative">
+                    <button onclick="deleteInfo(${i.id})" class="absolute top-3 right-3 text-gray-200"><i class="fa-solid fa-xmark"></i></button>
+                    <h3 class="font-bold text-sm text-jp-text mb-1">${i.title}</h3>
+                    <p class="text-xs text-gray-500 whitespace-pre-line">${i.content}</p>
+                </div>`).join('');
+        }
+        function deleteInfo(id) { if(confirm("刪除筆記？")) { db.info = db.info.filter(x=>x.id!==id); save(); } }
+        
+        function openModal(type) {
+            if(type === 'converter') { document.getElementById('modal-converter').classList.remove('hidden'); return; }
+            if(type === 'safety') { document.getElementById('modal-safety').classList.remove('hidden'); return; }
+            state.currentList = type;
+            const config = { luggage: {t:'行李', i:'suitcase'}, shopping: {t:'購物', i:'bag-shopping'}, todo: {t:'待辦', i:'check-circle'} };
+            document.getElementById('generic-title').innerHTML = `<i class="fa-solid fa-${config[type].i} text-jp-accent"></i> ${config[type].t}`;
+            renderGenericList();
+            document.getElementById('modal-generic').classList.remove('hidden');
+            document.getElementById('main-menu').classList.add('hidden'); document.getElementById('menu-overlay').classList.add('hidden');
+        }
+        function renderGenericList() {
+            const type = state.currentList;
+            const list = db[type] || [];
+            document.getElementById('generic-list').innerHTML = list.map(i => `
+                <li class="flex items-center gap-3 bg-white p-3 rounded-lg border border-gray-100 shadow-sm ${i.done ? 'opacity-50' : ''}">
+                    <div onclick="toggleItem('${type}', ${i.id})" class="w-5 h-5 rounded-full border-2 ${i.done ? 'bg-jp-accent border-jp-accent' : 'border-gray-300'} flex items-center justify-center text-white text-[10px] cursor-pointer"><i class="fa-solid fa-check ${i.done?'':'hidden'}"></i></div>
+                    <span class="flex-1 text-sm font-medium ${i.done?'line-through':''}">${i.text}</span>
+                    <button onclick="deleteListItem('${type}', ${i.id})" class="text-gray-300 px-2"><i class="fa-solid fa-xmark"></i></button>
+                </li>`).join('');
+        }
+        function addGenericItem() { const inp = document.getElementById('generic-input'); if(!inp.value) return; if(!db[state.currentList]) db[state.currentList] = []; db[state.currentList].push({ id: Date.now(), text: inp.value, done: false }); inp.value = ''; save(); renderGenericList(); }
+        function toggleItem(t, id) { const i = db[t].find(x=>x.id===id); if(i) i.done=!i.done; save(); renderGenericList(); }
+        function deleteListItem(t, id) { db[t] = db[t].filter(x=>x.id!==id); save(); renderGenericList(); }
+        function closeGenericModal() { document.getElementById('modal-generic').classList.add('hidden'); }
+
+        // --- FORMS & SAFETY ---
+        function openAddModal(type) {
+            state.addType = type;
+            document.getElementById('add-modal').classList.remove('hidden');
+            const c = document.getElementById('modal-content');
+            if(type === 'itinerary') {
+                c.innerHTML = `
+                    <div class="grid grid-cols-3 gap-2"><div class="bg-gray-50 p-2 rounded-xl border border-gray-100"><label class="text-[9px] text-gray-400 block">時間</label><input type="time" name="time" class="bg-transparent w-full font-bold outline-none text-sm" required></div><div class="col-span-2 bg-gray-50 p-2 rounded-xl border border-gray-100"><label class="text-[9px] text-gray-400 block">類型</label><select name="type" class="bg-transparent w-full font-bold outline-none text-sm">${Object.entries(CATS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></div></div>
+                    <input type="text" name="title" placeholder="標題" class="w-full bg-gray-50 p-3 rounded-xl outline-none border border-gray-100 font-bold text-sm" required>
+                    <input type="text" name="loc" placeholder="地點" class="w-full bg-gray-50 p-3 rounded-xl outline-none border border-gray-100 text-sm">
+                    <input type="text" name="bookingRef" placeholder="預約代號 / 備註" class="w-full bg-blue-50/50 p-3 rounded-xl text-sm outline-none text-blue-800 placeholder-blue-300">
+                    <textarea name="note" placeholder="備註..." class="w-full bg-gray-50 p-3 rounded-xl outline-none border border-gray-100 h-20 text-sm resize-none"></textarea>
+                    <input type="url" name="link" placeholder="網址 (選填)" class="w-full bg-gray-50 p-3 rounded-xl outline-none border border-gray-100 text-sm">`;
+            } else if (type === 'expense') {
+                c.innerHTML = `<input type="text" name="desc" placeholder="項目" class="w-full bg-gray-50 p-3 rounded-xl font-bold outline-none text-sm" required><div class="flex gap-2"><input type="number" name="amount" placeholder="0" class="flex-1 bg-gray-50 p-3 rounded-xl font-bold text-lg outline-none" required><select name="curr" class="w-20 bg-jp-text text-white rounded-xl font-bold outline-none text-center text-sm"><option value="JPY">¥</option><option value="HKD">$</option></select></div>`;
+            } else {
+                 c.innerHTML = `<input type="text" name="title" placeholder="標題" class="w-full bg-gray-50 p-3 rounded-xl font-bold outline-none text-sm" required><textarea name="content" placeholder="內容..." class="w-full bg-gray-50 p-3 rounded-xl outline-none h-24 mt-2 resize-none text-sm"></textarea>`;
+            }
+        }
+        function closeAddModal() { document.getElementById('add-modal').classList.add('hidden'); }
+        async function handleFormSubmit(e) {
+            e.preventDefault(); const data = Object.fromEntries(new FormData(e.target)); data.id = Date.now();
+            if(state.addType === 'itinerary') { data.date = state.date; if(data.loc) { try { const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(data.loc + " Fukuoka")}`); const j = await r.json(); if(j[0]) { data.lat = parseFloat(j[0].lat); data.lng = parseFloat(j[0].lon); } } catch(e){} } db.itinerary.push(data); }
+            else if (state.addType === 'expense') { data.date = state.date; db.expenses.push(data); } else db.info.push(data);
+            save(); closeAddModal();
+        }
+
+        // --- UTILS ---
+        function toggleMainMenu() { const m = document.getElementById('main-menu'), o = document.getElementById('menu-overlay'); if(m.classList.contains('hidden')) { m.classList.remove('hidden'); o.classList.remove('hidden'); } else { m.classList.add('hidden'); o.classList.add('hidden'); } }
+        function switchTab(t) { state.tab = t; ['itinerary', 'map', 'finance', 'info'].forEach(x => document.getElementById(`view-${x}`).classList.add('hidden')); document.getElementById(`view-${t}`).classList.remove('hidden'); document.querySelectorAll('.nav-btn').forEach(b => { b.classList.remove('active', 'text-jp-accent'); b.classList.add('text-gray-300'); }); const btn = document.querySelector(`button[onclick="switchTab('${t}')"]`); btn.classList.remove('text-gray-300'); btn.classList.add('active', 'text-jp-accent'); if(t==='map') refreshMap(); }
+        function openTaxiCard() { document.getElementById('modal-taxi').classList.remove('hidden'); }
+        function closeModal(t) { document.getElementById(`modal-${t}`).classList.add('hidden'); }
+        function convertCurrency(s) { const f = document.getElementById('conv-foreign'), h = document.getElementById('conv-home'); if(s==='foreign') h.value = (f.value * CONFIG.rate).toFixed(1); else f.value = (h.value / CONFIG.rate).toFixed(0); }
+        function updateBadges() { const c = (db.shopping||[]).filter(i=>!i.done).length + (db.luggage||[]).filter(i=>!i.done).length; const el = document.getElementById('global-badge'); if(c>0) el.classList.remove('hidden'); else el.classList.add('hidden'); document.getElementById('menu-badge-shop').innerText = (db.shopping||[]).filter(i=>!i.done).length; document.getElementById('menu-badge-luggage').innerText = (db.luggage||[]).filter(i=>!i.done).length; }
+        function exportData() { const s = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db)); const n = document.createElement('a'); n.href = s; n.download = `trip_${new Date().toISOString().slice(0,10)}.json`; document.body.appendChild(n); n.click(); n.remove(); }
+        function importData(i) { const f = i.files[0]; if(!f) return; const r = new FileReader(); r.onload = function(e) { try { db = JSON.parse(e.target.result); save(); alert("已還原！"); location.reload(); } catch(e) { alert("格式錯誤"); } }; r.readAsText(f); }
+        
+        // Safety
+        let audioCtx, osc, isSiren=false;
+        function toggleSiren() { const b=document.getElementById('siren-btn'), t=document.getElementById('siren-text'); if(isSiren){ if(osc){osc.stop();osc.disconnect();osc=null;} isSiren=false; b.classList.remove('siren-active'); t.innerText="啟動防狼警報"; } else { if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); osc=audioCtx.createOscillator(); const g=audioCtx.createGain(); osc.type='sawtooth'; osc.frequency.setValueAtTime(800,audioCtx.currentTime); osc.frequency.linearRampToValueAtTime(1200,audioCtx.currentTime+0.3); osc.connect(g); g.connect(audioCtx.destination); const l=audioCtx.createOscillator(); l.type='square'; l.frequency.value=4; const lg=audioCtx.createGain(); lg.gain.value=400; l.connect(lg); lg.connect(osc.frequency); l.start(); osc.start(); isSiren=true; b.classList.add('siren-active'); t.innerText="警報中 點擊關閉"; } }
+        function saveContact() { db.settings.safetyContact = document.getElementById('safety-contact').value; save(); }
+        function sendWhatsAppSOS() { const c = db.settings.safetyContact; if(!c) { alert("請先輸入電話"); return; } navigator.geolocation.getCurrentPosition(p => { const url = `https://wa.me/${c}?text=${encodeURIComponent(`緊急報平安: http://maps.google.com/?q=${p.coords.latitude},${p.coords.longitude}`)}`; location.href = url; }, () => alert("無法定位")); }
+        function openNearby(t) { navigator.geolocation.getCurrentPosition(p => { const q = t==='police'?'交番':t==='hospital'?'病院':'コンビニ'; window.open(`https://www.google.com/maps/search/?api=1&query=${q}&center=${p.coords.latitude},${p.coords.longitude}`); }); }
+
+        init();
+    </script>
+</body>
+</html>
