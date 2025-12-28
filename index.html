@@ -6,18 +6,19 @@
     <title>京都 2026 獨旅 - 祇園祭</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Shippori+Mincho:wght@500;700&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            /* 選項三：祇園祭與古都之夜配色 */
-            --bg-color: #3E3C3A;       /* 煤竹色 - 背景 */
-            --card-color: #E8E8E8;     /* 灰白 - 卡片 */
-            --accent-color: #E95464;   /* 朱紅 - 強調/按鈕 */
-            --text-on-dark: #FFFFFB;   /* 象牙白 - 深底文字 */
-            --text-on-light: #2F2F2F;  /* 墨黑 - 淺底文字 */
-            --dim-text: #666666;       /* 次要文字 */
-            --tag-bg: #D0D0D0;         /* 標籤背景 */
+            --bg-color: #3E3C3A;       /* 煤竹色 */
+            --card-color: #E8E8E8;     /* 灰白 */
+            --accent-color: #E95464;   /* 朱紅 */
+            --text-on-dark: #FFFFFB;
+            --text-on-light: #2F2F2F;
+            --btn-tabelog: #FAD13D;
+            --btn-booking: #2A9D8F;
+            --weather-sun: #FDB813;
+            --weather-rain: #5C8BC0;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -36,213 +37,177 @@
         /* --- Header --- */
         header {
             padding: 15px 20px;
-            background-color: rgba(62, 60, 58, 0.98);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background-color: var(--bg-color);
             position: sticky; top: 0; z-index: 100;
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        header h1 { margin: 0; font-size: 1.1rem; font-weight: 500; letter-spacing: 1px; }
-        header span { font-size: 0.8rem; color: var(--accent-color); font-weight: bold; }
-
-        /* --- Main Content --- */
-        main {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 0 80px 0; /* Bottom padding for nav */
-            scroll-behavior: smooth;
+        header h1 { margin: 0; font-family: 'Shippori Mincho', serif; font-size: 1.4rem; letter-spacing: 2px; }
+        header .subtitle { font-size: 0.8rem; color: var(--accent-color); display: block; margin-top: -2px;}
+        
+        /* 風車按鈕 (Toolbox Trigger) */
+        .toolbox-trigger {
+            font-size: 1.4rem; color: var(--accent-color);
+            cursor: pointer; transition: transform 0.5s;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
         }
+        .toolbox-trigger:active { transform: rotate(180deg); }
 
-        .page { display: none; padding: 20px; animation: fadeIn 0.3s ease; }
-        .page.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* --- Date Selector --- */
+        /* --- Global Date Selector --- */
         .date-selector-container {
-            position: sticky; top: 0;
             background: var(--bg-color);
+            padding: 5px 20px 15px 20px;
             z-index: 90;
-            padding: 15px 20px 5px 20px;
-            margin: 0 -20px 20px -20px; /* Extend to edges */
-            box-shadow: 0 5px 10px -5px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px -5px rgba(0,0,0,0.5);
         }
         .date-selector {
-            display: flex; overflow-x: auto; gap: 10px; padding-bottom: 10px;
-            scrollbar-width: none; /* Firefox */
+            display: flex; overflow-x: auto; gap: 10px; padding-bottom: 5px;
+            scrollbar-width: none;
         }
-        .date-selector::-webkit-scrollbar { display: none; } /* Chrome */
+        .date-selector::-webkit-scrollbar { display: none; }
         
         .date-chip {
             background: rgba(255,255,255,0.1);
-            padding: 8px 14px;
-            border-radius: 20px;
-            white-space: nowrap;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
+            padding: 8px 12px;
+            border-radius: 16px;
+            min-width: 55px; text-align: center;
+            cursor: pointer; transition: all 0.2s;
             border: 1px solid transparent;
             color: #aaa;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            min-width: 60px;
         }
-        .date-chip span.day-num { font-size: 1.1rem; font-weight: bold; display: block; }
+        .date-chip span.day-num { font-size: 1rem; font-weight: bold; display: block; }
         .date-chip span.day-week { font-size: 0.7rem; }
-
         .date-chip.active {
-            background: var(--accent-color);
-            color: #fff;
-            box-shadow: 0 0 10px rgba(233, 84, 100, 0.4);
+            background: var(--accent-color); color: #fff;
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(233, 84, 100, 0.4);
         }
 
-        /* --- Timeline & Cards --- */
-        .timeline-container { padding-top: 10px; }
+        /* --- Main Content --- */
+        main {
+            flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 90px;
+            scroll-behavior: smooth;
+        }
+        .page { display: none; animation: fadeIn 0.3s ease; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Cards & Timeline --- */
         .timeline-item {
-            position: relative;
-            padding-left: 25px;
-            padding-bottom: 25px;
+            position: relative; padding-left: 25px; padding-bottom: 25px;
             border-left: 2px solid rgba(233, 84, 100, 0.3);
         }
-        .timeline-item:last-child { border-left: 2px solid transparent; }
+        .timeline-item:last-child { border-left: color: transparent; }
         .timeline-item::before {
             content: ''; position: absolute; left: -6px; top: 18px;
             width: 10px; height: 10px; background: var(--accent-color);
-            border-radius: 50%; box-shadow: 0 0 0 4px rgba(62, 60, 58, 1);
+            border-radius: 50%;
         }
 
         .card {
-            background-color: var(--card-color);
-            color: var(--text-on-light);
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: transform 0.2s;
+            background-color: var(--card-color); color: var(--text-on-light);
+            border-radius: 12px; padding: 16px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2); cursor: pointer;
             position: relative;
         }
-        .card:active { transform: scale(0.98); }
-        .card-time { 
-            font-size: 0.8rem; color: var(--accent-color); 
-            font-weight: 700; margin-bottom: 6px; display: block;
-        }
-        .card-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 8px 0; line-height: 1.4; }
-        
+        .card-time { font-size: 0.8rem; color: var(--accent-color); font-weight: 700; display: block; margin-bottom: 5px;}
+        .card-title { font-size: 1.1rem; font-weight: 700; margin: 0 0 8px 0; }
         .tags { display: flex; gap: 6px; flex-wrap: wrap; }
-        .card-tag { 
-            font-size: 0.7rem; background: var(--tag-bg); 
-            padding: 3px 8px; border-radius: 4px; color: #444; font-weight: 500;
-        }
-        .card-tag.highlight { background: #ffe4e6; color: #d63345; }
+        .card-tag { font-size: 0.7rem; background: #D0D0D0; padding: 3px 8px; border-radius: 4px; color: #444; }
 
-        /* --- Modal --- */
-        .modal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 2000;
-            justify-content: center; align-items: end;
-            backdrop-filter: blur(2px);
+        /* --- Toolbox Overlay (Floating) --- */
+        .toolbox-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000;
+            display: none; flex-direction: column; padding: 20px;
+            backdrop-filter: blur(5px);
+            animation: fadeIn 0.2s;
         }
-        .modal.open { display: flex; }
-        .modal-content {
-            background: var(--card-color);
-            color: var(--text-on-light);
-            width: 100%; max-width: 600px;
-            max-height: 85vh;
-            border-radius: 20px 20px 0 0;
-            padding: 25px;
+        .toolbox-overlay.open { display: flex; }
+        .toolbox-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 30px; border-bottom: 1px solid #555; padding-bottom: 15px;
+        }
+        .toolbox-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
             overflow-y: auto;
-            position: relative;
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.5);
         }
-        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .tool-widget {
+            background: rgba(255,255,255,0.1); border-radius: 12px; padding: 15px;
+            text-align: center; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .tool-widget i { font-size: 1.5rem; color: var(--accent-color); margin-bottom: 8px; display:block; }
         
-        .close-modal { 
-            position: absolute; top: 15px; right: 20px; 
-            font-size: 1.8rem; color: #888; cursor: pointer; padding: 5px;
-        }
-        
-        .modal-header h2 { margin: 0 0 5px 0; font-size: 1.4rem; color: #222; padding-right: 30px;}
-        .modal-header .sub { font-size: 0.9rem; color: var(--accent-color); font-weight: bold; }
-
-        .modal-body { margin-top: 20px; }
-        .info-row { margin: 12px 0; display: flex; align-items: flex-start; gap: 12px; font-size: 0.95rem; line-height: 1.5; }
-        .info-row i { color: var(--accent-color); margin-top: 4px; width: 20px; text-align: center;}
-        
-        .note-box {
-            background: #f5f5f5; border-left: 4px solid var(--accent-color);
-            padding: 12px; margin: 15px 0; border-radius: 0 6px 6px 0;
-            font-size: 0.9rem; color: #444; line-height: 1.6;
-        }
-        .note-box a { color: var(--accent-color); font-weight: bold; text-decoration: none; border-bottom: 1px dashed; }
-
-        .action-btn {
-            display: flex; justify-content: center; align-items: center; gap: 8px;
-            width: 100%; padding: 14px; margin-top: 20px;
-            background: var(--accent-color); color: white;
-            text-decoration: none; border-radius: 10px;
-            font-weight: bold; font-size: 1rem; border: none; cursor: pointer;
-            box-shadow: 0 4px 10px rgba(233, 84, 100, 0.3);
-        }
-        .action-btn:active { transform: scale(0.97); }
-
-        /* --- Lists --- */
-        .list-section h3 { 
-            border-bottom: 2px solid var(--accent-color); 
-            padding-bottom: 8px; margin-top: 25px; margin-bottom: 15px;
-            display: inline-block; font-size: 1.1rem;
-        }
-        .checklist-item {
-            background: rgba(255,255,255,0.08);
-            padding: 14px; margin-bottom: 10px; border-radius: 8px;
-            display: flex; align-items: center; gap: 15px;
-            transition: background 0.2s;
-        }
-        .checklist-item.checked { opacity: 0.5; }
-        .checklist-item.checked span { text-decoration: line-through; }
-        .checklist-item input { width: 20px; height: 20px; accent-color: var(--accent-color); }
-
-        /* --- Tools --- */
-        .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .tool-card {
-            background: rgba(255,255,255,0.08); padding: 20px;
-            border-radius: 12px; text-align: center;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-        .tool-card i { font-size: 1.8rem; color: var(--accent-color); margin-bottom: 10px; }
-        .tool-card h3 { margin: 5px 0; font-size: 1rem; }
-        .tool-card p { font-size: 0.8rem; opacity: 0.7; margin: 0; }
-        
-        .safety-btn {
-            grid-column: span 2;
-            background: linear-gradient(135deg, #2E4B71, #1a2e47);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .rate-calc input {
-            width: 100%; padding: 8px; margin-top: 5px;
-            background: rgba(0,0,0,0.3); border: 1px solid #555;
-            color: white; border-radius: 4px; text-align: center;
+        /* Rate Calculator in Toolbox */
+        .rate-calc { display: flex; gap: 5px; align-items: center; margin-top: 5px; }
+        .rate-calc input { 
+            width: 100%; background: transparent; border: 1px solid #777; 
+            color: white; padding: 5px; border-radius: 4px; text-align: center; 
         }
 
-        /* --- Map --- */
-        #map-container { height: 100%; width: 100%; border-radius: 12px; }
+        /* --- Daily Weather Card --- */
+        .daily-weather-card {
+            background: linear-gradient(135deg, #4A4846, #2F2E2D);
+            border-radius: 16px; padding: 25px; text-align: center;
+            border: 1px solid rgba(255,255,255,0.1); margin-top: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .dw-icon { font-size: 4rem; margin: 15px 0; }
+        .dw-temp { font-size: 3rem; font-weight: bold; }
+        .dw-loc { color: var(--accent-color); font-size: 1.2rem; letter-spacing: 1px; }
+
+        /* --- Daily Shopping Section --- */
+        .today-shopping {
+            background: rgba(233, 84, 100, 0.1); border: 1px solid var(--accent-color);
+            border-radius: 12px; padding: 15px; margin-bottom: 25px;
+        }
+        .today-shopping h4 { margin: 0 0 10px 0; color: var(--accent-color); font-size: 1rem; }
 
         /* --- Bottom Nav --- */
         nav.bottom-nav {
-            position: fixed; bottom: 0; width: 100%;
-            background-color: #2b2a29;
-            display: flex; justify-content: space-around;
-            padding: 10px 0 25px 0; /* Extra padding for iPhone home bar */
-            border-top: 1px solid rgba(255,255,255,0.1);
-            z-index: 1000;
+            position: fixed; bottom: 0; width: 100%; background-color: #2b2a29;
+            display: flex; justify-content: space-around; padding: 12px 0 25px 0;
+            border-top: 1px solid rgba(255,255,255,0.1); z-index: 1000;
         }
         .nav-item {
-            color: #888; text-align: center;
-            font-size: 0.7rem; cursor: pointer;
-            width: 25%; transition: color 0.2s;
+            color: #888; text-align: center; font-size: 0.7rem; cursor: pointer; width: 25%;
+            transition: color 0.2s;
         }
-        .nav-item i { display: block; font-size: 1.3rem; margin-bottom: 4px; }
+        .nav-item i { display: block; font-size: 1.2rem; margin-bottom: 4px; }
         .nav-item.active { color: var(--accent-color); }
 
+        /* --- Map Container --- */
+        #map-container { height: 100%; width: 100%; border-radius: 12px; }
+
+        /* Checklist Styles */
+        .checklist-item {
+            background: rgba(255,255,255,0.08); padding: 12px; margin-bottom: 8px;
+            border-radius: 8px; display: flex; align-items: center; gap: 10px;
+        }
+        .checklist-item input { accent-color: var(--accent-color); width: 18px; height: 18px;}
+        .checklist-item.checked { opacity: 0.5; text-decoration: line-through; }
+
+        /* Action Buttons */
+        .action-btn {
+            display: block; width: 100%; padding: 12px; margin-top: 10px;
+            background: var(--accent-color); color: white; text-align: center;
+            text-decoration: none; border-radius: 8px; border: none; font-weight: bold;
+        }
+        .tabelog-btn { background: var(--btn-tabelog); color: #333; }
+        .booking-btn { background: var(--btn-booking); }
+
+        /* Modal */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 3000;
+            justify-content: center; align-items: end;
+        }
+        .modal.open { display: flex; }
+        .modal-content {
+            background: var(--card-color); color: var(--text-on-light);
+            width: 100%; max-height: 85vh; border-radius: 20px 20px 0 0;
+            padding: 25px; overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -250,114 +215,107 @@
     <header>
         <div>
             <h1>KYOTO 2026</h1>
-            <span>7/15 - 7/22 祇園祭獨旅</span>
+            <span class="subtitle">祇園祭 • 獨旅</span>
         </div>
-        <i class="fa-solid fa-fan" style="color: var(--accent-color); font-size: 1.2rem;"></i>
+        <div class="toolbox-trigger" onclick="toggleToolbox()">
+            <i class="fa-solid fa-fan"></i>
+        </div>
     </header>
+
+    <div class="date-selector-container">
+        <div class="date-selector" id="date-selector">
+            </div>
+    </div>
 
     <main>
         <div id="page-itinerary" class="page active">
-            <div class="date-selector-container">
-                <div class="date-selector" id="date-selector">
-                    </div>
-            </div>
-
-            <div class="timeline-container" id="timeline-container">
+            <div id="timeline-container">
                 </div>
-            
-            <div style="text-align: center; color: #666; font-size: 0.8rem; margin-top: 30px;">
-                <p>平安喜樂 • 滿載而歸</p>
-            </div>
+        </div>
+
+        <div id="page-weather" class="page">
+            <h3 style="color:var(--text-on-dark); border-left: 4px solid var(--accent-color); padding-left: 10px;">本日天氣</h3>
+            <div id="daily-weather-container">
+                </div>
+            <p style="font-size:0.8rem; color:#888; margin-top:20px; text-align:center;">* 2026年預報未出，顯示歷史均值</p>
         </div>
 
         <div id="page-map" class="page" style="height: 100%; padding: 0;">
             <div id="map-container"></div>
-        </div>
-
-        <div id="page-lists" class="page">
-            <div class="list-section">
-                <h3><i class="fa-solid fa-basket-shopping"></i> 購物清單</h3>
-                <div id="shopping-list-container">
-                    </div>
-            </div>
-
-            <div class="list-section">
-                <h3><i class="fa-solid fa-suitcase"></i> 行李清單</h3>
-                <div id="packing-list-container">
-                    </div>
+            <div style="position:absolute; bottom:100px; left:20px; z-index:900; background:rgba(0,0,0,0.7); padding:5px 10px; border-radius:20px; font-size:0.8rem;">
+                <i class="fa-solid fa-filter"></i> 只顯示本日景點
             </div>
         </div>
 
-        <div id="page-tools" class="page">
-            <div class="tools-grid">
-                <div class="tool-card safety-btn" onclick="sendSafetyMessage()">
-                    <i class="fa-brands fa-whatsapp" style="color: white;"></i>
-                    <h3 style="color:white;">一鍵報平安</h3>
-                    <p style="color:#ccc;">發送位置給家人 (不含緊急字眼)</p>
-                </div>
-
-                <div class="tool-card">
-                    <i class="fa-solid fa-yen-sign"></i>
-                    <h3>匯率換算</h3>
-                    <div style="margin-top:10px;">
-                        <input type="number" id="jpy-input" placeholder="日幣 JPY" oninput="calcRate('jpy')">
-                        <div style="font-size: 0.8rem; margin: 5px 0;">⇅</div>
-                        <input type="number" id="hkd-input" placeholder="港幣 HKD" oninput="calcRate('hkd')">
-                    </div>
-                    <p style="font-size: 0.7rem; margin-top:5px; opacity:0.5;">*假設 0.052</p>
-                </div>
-
-                <div class="tool-card" onclick="alert('航班：KIX 進出\n住宿：京都站周邊 (建議 VIA INN 或 Keihan Grande)')">
-                    <i class="fa-solid fa-plane"></i>
-                    <h3>航班住宿</h3>
-                    <p>查看資料</p>
-                </div>
-
-                 <div class="tool-card" onclick="alert('警察: 110\n消防/救護: 119\n外交部緊急聯絡: 800-0885-0885')">
-                    <i class="fa-solid fa-phone-medical"></i>
-                    <h3>緊急聯絡</h3>
-                    <p>110 / 119</p>
-                </div>
-                
-                 <div class="tool-card">
-                    <i class="fa-solid fa-train-subway"></i>
-                    <h3>ICOCA</h3>
-                    <p>充值 5000円</p>
-                </div>
+        <div id="page-shopping" class="page">
+            <div id="today-shopping-opportunity" class="today-shopping" style="display:none;">
+                <h4><i class="fa-solid fa-bullhorn"></i> 今日採買機會</h4>
+                <div id="today-shopping-text" style="font-size:0.9rem; color:#333;"></div>
             </div>
+
+            <h3 style="border-bottom: 2px solid var(--accent-color); display:inline-block; margin-bottom:15px;">
+                <i class="fa-solid fa-basket-shopping"></i> 完整購物清單
+            </h3>
+            <div id="shopping-list-container">
+                </div>
         </div>
     </main>
 
+    <div id="toolbox-overlay" class="toolbox-overlay">
+        <div class="toolbox-header">
+            <h2 style="margin:0;"><i class="fa-solid fa-toolbox"></i> 百寶箱</h2>
+            <i class="fa-solid fa-xmark" style="font-size:1.5rem; cursor:pointer;" onclick="toggleToolbox()"></i>
+        </div>
+        
+        <div class="toolbox-grid">
+            <div class="tool-widget" style="grid-column: span 2; text-align:left;">
+                <h3 style="margin-top:0; border-bottom:1px solid #555; padding-bottom:5px;">
+                    <i class="fa-solid fa-suitcase" style="display:inline; font-size:1rem;"></i> 行李清單
+                </h3>
+                <div id="packing-list-container" style="max-height:150px; overflow-y:auto;">
+                    </div>
+            </div>
+
+            <div class="tool-widget" onclick="sendSafetyMessage()" style="background:rgba(46, 75, 113, 0.6);">
+                <i class="fa-brands fa-whatsapp"></i>
+                <div style="font-size:0.9rem;">一鍵報平安</div>
+            </div>
+
+            <div class="tool-widget" onclick="alert('警察: 110\n消防: 119')">
+                <i class="fa-solid fa-phone-medical"></i>
+                <div style="font-size:0.9rem;">緊急聯絡</div>
+            </div>
+
+            <div class="tool-widget" style="grid-column: span 2;">
+                <div style="font-size:0.9rem; margin-bottom:5px;">匯率換算 (0.052)</div>
+                <div class="rate-calc">
+                    <input type="number" id="jpy-input" placeholder="JPY" oninput="calcRate('jpy')">
+                    <i class="fa-solid fa-arrow-right-arrow-left" style="font-size:0.8rem; color:#888;"></i>
+                    <input type="number" id="hkd-input" placeholder="HKD" oninput="calcRate('hkd')">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div id="detail-modal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="closeModal()">×</span>
-            <div class="modal-header">
-                <h2 id="modal-title">標題</h2>
-                <span id="modal-type" class="sub">類型</span>
+            <div style="display:flex; justify-content:space-between;">
+                <h2 id="modal-title" style="margin:0; color:#333;">標題</h2>
+                <span onclick="closeModal()" style="font-size:1.5rem; color:#888; cursor:pointer;">×</span>
             </div>
+            <span id="modal-type" style="font-size:0.8rem; color:var(--accent-color); font-weight:bold;">類型</span>
             
-            <div class="modal-body">
-                <div class="info-row" id="row-time">
-                    <i class="fa-regular fa-clock"></i>
-                    <span id="modal-time">時間</span>
-                </div>
-                <div class="info-row" id="row-address">
-                    <i class="fa-solid fa-location-dot"></i>
-                    <span id="modal-address">地址</span>
-                </div>
-                <div class="info-row" id="row-price" style="display:none;">
-                    <i class="fa-solid fa-ticket"></i>
-                    <span id="modal-price">門票/預算</span>
+            <div style="margin-top:20px; color:#333;">
+                <div style="margin-bottom:10px;"><i class="fa-regular fa-clock" style="color:var(--accent-color); width:20px;"></i> <span id="modal-time"></span></div>
+                <div style="margin-bottom:10px;"><i class="fa-solid fa-location-dot" style="color:var(--accent-color); width:20px;"></i> <span id="modal-address"></span></div>
+                <div id="row-price" style="margin-bottom:10px;"><i class="fa-solid fa-ticket" style="color:var(--accent-color); width:20px;"></i> <span id="modal-price"></span></div>
+                
+                <div style="background:#f5f5f5; padding:15px; border-radius:8px; margin-top:15px; font-size:0.95rem; line-height:1.6;">
+                    <strong><i class="fa-regular fa-lightbulb"></i> 攻略：</strong><br>
+                    <span id="modal-note"></span>
                 </div>
 
-                <div class="note-box">
-                    <div style="font-weight:bold; margin-bottom:5px;">攻略與備註：</div>
-                    <span id="modal-note">內容...</span>
-                </div>
-
-                <button class="action-btn" id="modal-map-btn">
-                    <i class="fa-solid fa-map-location-dot"></i> 開啟 Google Maps 導航
-                </button>
+                <div id="modal-btn-group" style="margin-top:20px;"></div>
             </div>
         </div>
     </div>
@@ -366,298 +324,311 @@
         <div class="nav-item active" onclick="switchPage('itinerary', this)">
             <i class="fa-solid fa-calendar-days"></i> 行程
         </div>
+        <div class="nav-item" onclick="switchPage('weather', this)">
+            <i class="fa-solid fa-cloud-sun-rain"></i> 天氣
+        </div>
         <div class="nav-item" onclick="switchPage('map', this)">
             <i class="fa-solid fa-map"></i> 地圖
         </div>
-        <div class="nav-item" onclick="switchPage('lists', this)">
-            <i class="fa-solid fa-list-check"></i> 清單
-        </div>
-        <div class="nav-item" onclick="switchPage('tools', this)">
-            <i class="fa-solid fa-suitcase"></i> 百寶箱
+        <div class="nav-item" onclick="switchPage('shopping', this)">
+            <i class="fa-solid fa-bag-shopping"></i> 購物
         </div>
     </nav>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // --- 1. 行程資料庫 (The Data) ---
+        // --- DATA ---
+        // 加入座標 (coords) 以支援地圖按日顯示
         const scheduleData = {
             "day1": {
-                "date": "7/15 (三)",
-                "events": [
-                    { time: "14:00 - 16:00", title: "抵達與 Check-in", type: "交通", address: "京都車站八條口", note: "關西機場搭利木津巴士至八條口。下車抬頭找白色京都塔為正面。Klook可預約巴士票。", tags: ["移動", "Tips"] },
-                    { time: "16:00 - 18:00", title: "月桂冠大倉紀念館", type: "景點", address: "京都市伏見區南浜町247", price: "600日元", note: "重點：試飲夏季冰鎮生酒。必看：中庭伏水井（可喝）。<br>交通：近鐵桃山御陵前站步行10分。", tags: ["清酒", "歷史"] },
-                    { time: "18:00 - 19:00", title: "AEON Mall (Kohyo Supermarket)", type: "購物", address: "京都站八條口 Sakura館1樓", note: "採買宵夜：枝豆、水茄子漬物、刺身。超市開到21:00。", tags: ["超市", "補給"] },
-                    { time: "19:00 - 21:00", title: "晚餐：Jojo Izakaya (或 Isoya)", type: "美食", address: "京都市下京區 (四條烏丸附近)", price: "4000-5000日元", note: "必點：烤洋蔥整顆、季節野菜炭火燒。<br>Tabelog 評分4.5。若客滿改去 Isoya。", tags: ["居酒屋", "蔬菜"] }
-                ]
+                date: "7/15 (三)", loc: "京都車站", weather: {icon: "fa-cloud-sun", temp: "32°C", desc: "悶熱，適時補水"},
+                events: [
+                    { time: "14:00", title: "抵達 Check-in", type: "交通", address: "京都車站八條口", coords: [34.9844, 135.7588], note: "利木津巴士下車處，找白色京都塔。", bookingUrl: "https://www.klook.com/" },
+                    { time: "16:00", title: "月桂冠大倉紀念館", type: "景點", address: "伏見區南浜町", coords: [34.9298, 135.7607], note: "喝中庭井水，買生酒。", bookingUrl: "https://www.gekkeikan.com/" },
+                    { time: "19:00", title: "晚餐：Jojo Izakaya", type: "美食", address: "四條烏丸", coords: [35.0035, 135.7594], note: "烤洋蔥、野菜。", tabelogUrl: "https://tabelog.com/" }
+                ],
+                shopTip: "今日重點：京都車站超市 (AEON) 買宵夜、月桂冠買清酒。"
             },
             "day2": {
-                "date": "7/16 (四)",
-                "events": [
-                    { time: "08:30 - 09:30", title: "早餐：Ogawa Coffee", type: "美食", address: "下京區塩小路通室町東入ル (法華俱樂部地下)", note: "必點：京都早餐套餐 (厚片吐司+特調拿鐵)。", tags: ["咖啡"] },
-                    { time: "10:00 - 12:00", title: "黃櫻 Kappa Country", type: "景點", address: "伏見區塩屋町228", note: "河童主題館。中庭試飲 Lucky Cat/Dog 啤酒或柚子酒。", tags: ["清酒", "河童"] },
-                    { time: "12:00 - 13:30", title: "午餐：鳥せい 本店", type: "美食", address: "伏見區上油掛町186", price: "2000日元", note: "認大酒桶。必點：雞肉串燒拼盤+鐵桶生原酒。<br>強烈建議 Tabelog 預約。", tags: ["燒鳥", "排隊店"] },
-                    { time: "13:30 - 15:30", title: "伏見酒蔵小路", type: "品酒", address: "伏見區納屋町115", note: "必點：十八藏試飲 Set。拍照非常美。可 TableCheck 預約。", tags: ["清酒", "體驗"] },
-                    { time: "16:00 - 17:00", title: "自調香水：MY ONLY FRAGRANCE", type: "體驗", address: "中京區下丸屋町401-2", note: "製作專屬回憶香水，標籤印上旅程日期。近京都市役所前站。", tags: ["香氛", "紀念"] },
-                    { time: "18:00 - 20:00", title: "晚餐：Rokkaku Ace", type: "美食", address: "中京區", note: "必點：半熟蛋馬鈴薯沙拉 + 和牛塔塔。", tags: ["居酒屋"] },
-                    { time: "20:00 - 22:00", title: "祇園祭 前祭宵山", type: "祭典", address: "四條烏丸一帶", note: "步行者天國最熱鬧的一晚。記得買「長刀鉾粽」做護身符。注意人潮與財物。", tags: ["宵山", "夜遊"] }
-                ]
+                date: "7/16 (四)", loc: "伏見 & 市區", weather: {icon: "fa-fire", temp: "33°C", desc: "宵山夜熱鬧，注意防曬"},
+                events: [
+                    { time: "10:00", title: "黃櫻 Kappa Country", type: "景點", address: "伏見區", coords: [34.9312, 135.7615], note: "河童主題，試飲啤酒。" },
+                    { time: "13:30", title: "伏見酒蔵小路", type: "品酒", address: "伏見區納屋町", coords: [34.9330, 135.7600], note: "十八藏試飲Set。" },
+                    { time: "16:00", title: "MY ONLY FRAGRANCE", type: "體驗", address: "京都市役所前", coords: [35.0116, 135.7681], note: "自調香水。" },
+                    { time: "20:00", title: "祇園祭 前祭宵山", type: "祭典", address: "四條烏丸", coords: [35.0040, 135.7600], note: "步行者天國，買粽子。" }
+                ],
+                shopTip: "今日重點：伏見清酒、MY ONLY FRAGRANCE 香水、宵山護身符。"
             },
             "day3": {
-                "date": "7/17 (五)",
-                "events": [
-                    { time: "09:00 - 12:00", title: "山鉾巡行 (前祭)", type: "祭典", address: "京都市役所前 / 御池通", note: "Tips：避開主路口，找御池通樹蔭下觀看。或巡行結束後去巷弄看山鉾歸位。", tags: ["祭典", "必看"] },
-                    { time: "12:30 - 13:30", title: "午餐：Monsen (門扇)", type: "美食", address: "中京區", note: "雞白湯拉麵名店。必點雞骨拉麵，濃郁適合配酒。", tags: ["拉麵"] },
-                    { time: "13:30 - 16:30", title: "佐佐木酒造", type: "景點", address: "上京區日暮通椹木町下ル北伊勢屋町727", note: "洛中唯一酒造 (佐佐木藏之介老家)。建議預約參觀。地鐵二條城前站走15分。", tags: ["酒造"] },
-                    { time: "17:00 - 18:00", title: "超市：Lopia (Yodobashi)", type: "購物", address: "京都站 Yodobashi", note: "肉類便宜。必買：自家製香腸、壽司做宵夜。", tags: ["超市"] }
-                ]
+                date: "7/17 (五)", loc: "御池通", weather: {icon: "fa-cloud-showers-heavy", temp: "31°C", desc: "午後可能有雷陣雨"},
+                events: [
+                    { time: "09:00", title: "山鉾巡行", type: "祭典", address: "御池通", coords: [35.0110, 135.7650], note: "找樹蔭觀看。" },
+                    { time: "13:30", title: "佐佐木酒造", type: "景點", address: "二條城北", coords: [35.0195, 135.7490], note: "洛中唯一酒造。" },
+                    { time: "17:00", title: "Lopia 超市", type: "購物", address: "京都站 Yodobashi", coords: [34.9870, 135.7590], note: "買肉類熟食。" }
+                ],
+                shopTip: "今日重點：佐佐木酒造限定酒、Lopia 超市大採購。"
             },
-             "day4": {
-                "date": "7/18 (六)",
-                "events": [
-                    { time: "08:00 - 10:00", title: "伏見稻荷大社", type: "景點", address: "伏見稻荷大社", note: "早起避開人潮。走千本鳥居到奧社祈求人緣。早餐可吃 Vermillion Espresso。", tags: ["神社", "祈福"] },
-                    { time: "11:30 - 14:00", title: "藤岡酒造 (蒼空)", type: "品酒", address: "伏見區", note: "文青玻璃屋酒吧「En」。坐吧台看釀酒桶喝蒼空純米大吟釀。", tags: ["清酒", "文青"] },
-                    { time: "14:00 - 16:00", title: "香道：天香堂", type: "體驗", address: "右京區嵯峨釋迦堂門前南中院町13-6", note: "製作匂袋（香包），日式庭園氛圍浪漫。建議預約。", tags: ["嵐山", "香氛"] },
-                    { time: "16:00 - 17:00", title: "野宮神社", type: "景點", address: "嵐山竹林入口", note: "摸黑色龜石許願（一年內實現良緣），源氏物語場景。", tags: ["結緣"] },
-                     { time: "17:30 - 18:00", title: "業務超市 (Gyomu)", type: "購物", address: "市區分店", note: "必買：柚子胡椒醬 (便宜好用)。", tags: ["超市"] }
-                ]
+            "day4": {
+                date: "7/18 (六)", loc: "嵐山", weather: {icon: "fa-leaf", temp: "30°C", desc: "山區多雲，稍涼爽"},
+                events: [
+                    { time: "08:00", title: "伏見稻荷大社", type: "景點", address: "伏見稻荷", coords: [34.9671, 135.7727], note: "千本鳥居。" },
+                    { time: "14:00", title: "香道：天香堂", type: "體驗", address: "嵐山", coords: [35.0170, 135.6700], note: "製作匂袋。" }
+                ],
+                shopTip: "今日重點：嵐山香氛小物、狐狸面具。"
             },
             "day5": {
-                "date": "7/19 (日)",
-                "events": [
-                     { time: "09:00 - 10:00", title: "早餐：Sentido", type: "美食", address: "烏丸御池附近", note: "必點：熱壓三明治。", tags: ["咖啡"] },
-                    { time: "10:00 - 13:00", title: "錦市場 & 錦天滿宮", type: "景點", address: "錦市場", note: "必吃/買：打田漬物柴漬、豆乳甜甜圈、津之喜酒舖。去天滿宮摸銅牛求智慧。", tags: ["市場", "邊走邊吃"] },
-                    { time: "14:00 - 16:00", title: "下鴨神社 & 河合神社", type: "景點", address: "左京區下鴨泉川町59", note: "河合神社：買鏡繪馬用化妝品畫臉，祈求變美 (日本第一美容神)。", tags: ["神社", "美容"] },
-                    { time: "18:00 - 20:00", title: "晚餐：Giro Giro Hitoshina", type: "美食", address: "下京區", note: "現代懷石料理，適合獨旅。需預約。", tags: ["懷石"] }
-                ]
+                date: "7/19 (日)", loc: "錦市場", weather: {icon: "fa-sun", temp: "34°C", desc: "盛夏酷暑"},
+                events: [
+                    { time: "10:00", title: "錦市場", type: "美食", address: "錦市場", coords: [35.0050, 135.7650], note: "吃豆乳甜甜圈、買漬物。" },
+                    { time: "14:00", title: "下鴨神社", type: "景點", address: "左京區", coords: [35.0390, 135.7730], note: "河合神社求美貌。" }
+                ],
+                shopTip: "今日重點：錦市場漬物、七味粉、河合神社美人水。"
             },
-             "day6": {
-                "date": "7/20 (一)",
-                "events": [
-                    { time: "10:00 - 12:00", title: "京都文化博物館", type: "景點", address: "中京區三條高倉", note: "舊銀行建築，欣賞工藝品與建築之美。", tags: ["藝文"] },
-                    { time: "14:00 - 16:00", title: "JR京都伊勢丹 Isetan", type: "購物", address: "京都站大樓", note: "香水區：Shiro / Aux Paradis。地下街：551肉包、下鴨茶寮便當。", tags: ["百貨", "伴手禮"] },
-                    { time: "20:00 - 21:00", title: "後祭山鉾搭建 (山鉾建て)", type: "祭典", address: "烏丸御池周邊", note: "看職人無釘組裝大船鉾，人少悠閒，技術迷必看。", tags: ["後祭", "深度"] }
-                ]
+            "day6": {
+                date: "7/20 (一)", loc: "市中心", weather: {icon: "fa-cloud", temp: "33°C", desc: "多雲"},
+                events: [
+                     { time: "14:00", title: "伊勢丹 Isetan", type: "購物", address: "京都站", coords: [34.9850, 135.7580], note: "買 Shiro 香水、551肉包。" },
+                     { time: "20:00", title: "後祭山鉾搭建", type: "祭典", address: "烏丸御池", coords: [35.0100, 135.7600], note: "看職人技藝。" }
+                ],
+                shopTip: "今日重點：伊勢丹百貨 (Shiro, Aux Paradis)、551肉包。"
             },
-             "day7": {
-                "date": "7/21 (二)",
-                "events": [
-                    { time: "08:00 - 11:00", title: "東寺弘法市 (古董市集)", type: "市集", address: "南區九條町1 (東寺)", note: "每月21日限定。千攤古董、和服、舊酒器。早8-9點去寶物多。買古董猪口杯。", tags: ["市集", "尋寶"] },
-                    { time: "12:00 - 13:00", title: "午餐：市集攤販", type: "美食", address: "東寺境內", note: "炒麵、廣島燒，隨興吃。", tags: ["B級美食"] },
-                    { time: "18:00 - 23:00", title: "後祭宵山", type: "祭典", address: "烏丸御池周邊", note: "優雅寧靜版宵山。看屏風祭，買冰鎮清酒路邊喝，聽祇園囃子。", tags: ["宵山", "氛圍"] }
-                ]
+            "day7": {
+                date: "7/21 (二)", loc: "東寺", weather: {icon: "fa-sun", temp: "35°C", desc: "高溫警報，市集炎熱"},
+                events: [
+                    { time: "08:00", title: "東寺弘法市", type: "市集", address: "東寺", coords: [34.9810, 135.7480], note: "每月21日古董市集。" },
+                    { time: "18:00", title: "後祭宵山", type: "祭典", address: "市中心", coords: [35.0080, 135.7620], note: "寧靜版宵山。" }
+                ],
+                shopTip: "今日重點：東寺古董、舊和服、古董酒杯。"
             },
-             "day8": {
-                "date": "7/22 (三)",
-                "events": [
-                    { time: "09:00 - 10:30", title: "早餐：Inoda Coffee 本店", type: "美食", address: "中京區堺町通三條下ル", note: "必點：京之朝食 (火腿+炒蛋+咖啡)。體驗老派京都早晨。", tags: ["老舖"] },
-                    { time: "11:00 - 12:30", title: "最後採買 & 阿闍梨餅", type: "購物", address: "京都站", note: "新幹線內/外買阿闍梨餅 (Q彈紅豆餅)。", tags: ["伴手禮"] },
-                    { time: "13:00 - 14:00", title: "前往機場", type: "交通", address: "京都站八條口", note: "搭乘利木津巴士前往 KIX。平安回家！", tags: ["移動"] }
-                ]
+            "day8": {
+                date: "7/22 (三)", loc: "返程", weather: {icon: "fa-plane", temp: "32°C", desc: "天氣穩定"},
+                events: [
+                    { time: "11:00", title: "阿闍梨餅", type: "購物", address: "京都站", coords: [34.9858, 135.7588], note: "最後伴手禮。" },
+                    { time: "13:00", title: "前往機場", type: "交通", address: "八條口", coords: [34.9840, 135.7590], note: "利木津巴士。" }
+                ],
+                shopTip: "今日重點：阿闍梨餅、機場免稅店。"
             }
         };
 
-        const shoppingList = [
-            "一保堂 抹茶粉", "SOU・SOU 足袋/小物", "MY ONLY FRAGRANCE 香水",
-            "打田漬物 (柴漬/水茄子)", "津之喜酒舖 限定清酒", "Lopia 自製香腸",
-            "業務超市 柚子胡椒", "Shiro / Aux Paradis 香氛", "551 蓬萊肉包", "阿闍梨餅"
-        ];
-        
-        const packingList = [
-            "護照 & 影本", "ICOCA 卡 (或現金)", "行動電源", "輕便雨傘/雨衣", 
-            "防曬乳/帽子 (7月很熱)", "好走的鞋 (祭典走路)", "個人藥品", "網卡/漫遊"
-        ];
+        const shoppingList = ["一保堂 抹茶", "SOU・SOU 足袋", "MY ONLY FRAGRANCE", "打田漬物", "Lopia 香腸", "Shiro 香水", "551 肉包", "阿闍梨餅"];
+        const packingList = ["護照", "ICOCA", "行動電源", "雨傘/雨衣", "防曬", "好走的鞋", "網卡"];
 
-        // --- 2. 初始化邏輯 ---
+        // --- STATE & INIT ---
         let currentDay = "day1";
+        let map;
+        let markers = [];
 
-        function init() {
+        window.onload = function() {
+            initMap();
             renderDateSelector();
-            renderTimeline("day1");
             renderLists();
+            selectDay('day1'); // 預設第一天
+        };
+
+        // --- FUNCTIONS ---
+
+        // 1. 全局切換天數 (核心邏輯)
+        function selectDay(dayKey) {
+            currentDay = dayKey;
+            
+            // 更新上方日期按鈕狀態
+            document.querySelectorAll('.date-chip').forEach(el => el.classList.remove('active'));
+            document.getElementById(`chip-${dayKey}`).classList.add('active');
+
+            // 更新各頁面內容
+            renderTimeline(dayKey);
+            renderDailyWeather(dayKey);
+            renderDailyMap(dayKey);
+            renderDailyShopping(dayKey);
         }
 
-        // 渲染日期選擇器
+        // 2. 渲染日期列
         function renderDateSelector() {
             const container = document.getElementById('date-selector');
-            container.innerHTML = '';
-            Object.keys(scheduleData).forEach(dayKey => {
-                const dayInfo = scheduleData[dayKey];
-                const dayNum = dayKey.replace('day', '');
-                
-                const chip = document.createElement('div');
-                chip.className = `date-chip ${dayKey === 'day1' ? 'active' : ''}`;
-                chip.onclick = () => selectDay(dayKey, chip);
-                chip.innerHTML = `<span class="day-num">D${dayNum}</span><span class="day-week">${dayInfo.date.split(' ')[0]}</span>`;
-                container.appendChild(chip);
+            Object.keys(scheduleData).forEach(key => {
+                const dayNum = key.replace('day', '');
+                const dateShort = scheduleData[key].date.split(' ')[0];
+                const div = document.createElement('div');
+                div.className = 'date-chip';
+                div.id = `chip-${key}`;
+                div.innerHTML = `<span class="day-num">D${dayNum}</span><span class="day-week">${dateShort}</span>`;
+                div.onclick = () => selectDay(key);
+                container.appendChild(div);
             });
         }
 
-        // 切換日期
-        function selectDay(dayKey, chipEl) {
-            currentDay = dayKey;
-            // UI 更新
-            document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('active'));
-            chipEl.classList.add('active');
-            // 重新渲染行程
-            renderTimeline(dayKey);
-        }
-
-        // 渲染行程時間軸
-        function renderTimeline(dayKey) {
+        // 3. 渲染行程
+        function renderTimeline(key) {
             const container = document.getElementById('timeline-container');
-            container.innerHTML = ''; // 清空
+            container.innerHTML = `<h3 style="margin-left:30px; color:var(--accent-color);">${scheduleData[key].date}</h3>`;
             
-            // 加入日期標題
-            const dayTitle = document.createElement('h3');
-            dayTitle.style.marginLeft = '30px';
-            dayTitle.style.marginBottom = '20px';
-            dayTitle.style.fontSize = '1.2rem';
-            dayTitle.innerHTML = `<span style="color:var(--accent-color)">${scheduleData[dayKey].date}</span>`;
-            container.appendChild(dayTitle);
-
-            const events = scheduleData[dayKey].events;
-            events.forEach(event => {
+            scheduleData[key].events.forEach(ev => {
                 const item = document.createElement('div');
                 item.className = 'timeline-item';
-                
-                // 標籤 HTML
-                const tagsHtml = event.tags.map(t => `<span class="card-tag ${t==='必點'?'highlight':''}">${t}</span>`).join('');
-                
-                // 價格顯示 (若有)
-                const priceHtml = event.price ? `<span style="font-size:0.75rem; color:#666; margin-left:10px;"><i class="fa-solid fa-yen-sign"></i> ${event.price}</span>` : '';
-
                 item.innerHTML = `
-                    <div class="card" onclick='openEventModal(${JSON.stringify(event)})'>
-                        <span class="card-time">${event.time}</span>
-                        <h3 class="card-title">${event.title}</h3>
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div class="tags">${tagsHtml}</div>
-                            ${priceHtml}
-                        </div>
-                    </div>
-                `;
+                    <div class="card" onclick='openModal(${JSON.stringify(ev)})'>
+                        <span class="card-time">${ev.time}</span>
+                        <div class="card-title">${ev.title}</div>
+                        <span class="card-tag">${ev.type}</span>
+                    </div>`;
                 container.appendChild(item);
             });
         }
 
-        // 渲染清單
-        function renderLists() {
-            const sContainer = document.getElementById('shopping-list-container');
-            shoppingList.forEach((item, idx) => {
-                sContainer.innerHTML += createCheckItem(item, 'shop'+idx);
-            });
-
-            const pContainer = document.getElementById('packing-list-container');
-            packingList.forEach((item, idx) => {
-                pContainer.innerHTML += createCheckItem(item, 'pack'+idx);
-            });
-        }
-
-        function createCheckItem(text, id) {
-            return `
-                <div class="checklist-item" onclick="toggleCheck(this)">
-                    <input type="checkbox" id="${id}">
-                    <label for="${id}" style="pointer-events:none; width:100%;"><span>${text}</span></label>
+        // 4. 渲染單日天氣
+        function renderDailyWeather(key) {
+            const w = scheduleData[key].weather;
+            const container = document.getElementById('daily-weather-container');
+            container.innerHTML = `
+                <div class="daily-weather-card">
+                    <div style="font-size:1.2rem; font-weight:bold;">${scheduleData[key].date}</div>
+                    <div class="dw-loc"><i class="fa-solid fa-location-dot"></i> ${scheduleData[key].loc}</div>
+                    <div class="dw-icon"><i class="fa-solid ${w.icon}" style="color:${w.icon.includes('rain')?'var(--weather-rain)':'var(--weather-sun)'}"></i></div>
+                    <div class="dw-temp">${w.temp}</div>
+                    <div style="background:rgba(255,255,255,0.1); padding:5px 10px; border-radius:20px; display:inline-block; margin-top:10px;">${w.desc}</div>
                 </div>
             `;
         }
 
+        // 5. 渲染單日購物提示
+        function renderDailyShopping(key) {
+            const tipDiv = document.getElementById('today-shopping-opportunity');
+            const tipText = document.getElementById('today-shopping-text');
+            const tip = scheduleData[key].shopTip;
+            
+            if(tip) {
+                tipDiv.style.display = 'block';
+                tipText.innerText = tip;
+            } else {
+                tipDiv.style.display = 'none';
+            }
+        }
+
+        // 6. 地圖相關
+        function initMap() {
+            map = L.map('map-container').setView([34.9858, 135.7588], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+        }
+
+        function renderDailyMap(key) {
+            // 清除舊標記
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            const events = scheduleData[key].events;
+            const bounds = [];
+
+            events.forEach(ev => {
+                if(ev.coords) {
+                    const m = L.marker(ev.coords).addTo(map).bindPopup(ev.title);
+                    markers.push(m);
+                    bounds.push(ev.coords);
+                }
+            });
+
+            // 自動縮放以顯示當天所有點
+            if(bounds.length > 0) {
+                map.fitBounds(bounds, {padding: [50, 50]});
+            } else {
+                // 如果當天沒座標，回京都站
+                map.setView([34.9858, 135.7588], 13);
+            }
+        }
+
+        // 7. 清單 & 工具箱
+        function renderLists() {
+            const sList = document.getElementById('shopping-list-container');
+            shoppingList.forEach((item, i) => sList.innerHTML += createCheckItem(item, 'shop-'+i));
+            
+            const pList = document.getElementById('packing-list-container');
+            packingList.forEach((item, i) => pList.innerHTML += createCheckItem(item, 'pack-'+i));
+        }
+
+        function createCheckItem(text, id) {
+            return `<div class="checklist-item" onclick="toggleCheck(this)">
+                <input type="checkbox" id="${id}">
+                <label for="${id}" style="pointer-events:none; width:100%;">${text}</label>
+            </div>`;
+        }
         function toggleCheck(el) {
-            const input = el.querySelector('input');
-            input.checked = !input.checked;
-            el.classList.toggle('checked', input.checked);
+            const cb = el.querySelector('input');
+            cb.checked = !cb.checked;
+            el.classList.toggle('checked', cb.checked);
         }
 
-        // --- 3. 彈窗與互動 ---
-        function openEventModal(event) {
-            document.getElementById('modal-title').innerText = event.title;
-            document.getElementById('modal-type').innerText = event.type;
-            document.getElementById('modal-time').innerText = event.time;
-            document.getElementById('modal-address').innerText = event.address;
-            
-            // 處理備註 (支援 HTML)
-            document.getElementById('modal-note').innerHTML = event.note;
-
-            // 處理價格
-            if(event.price) {
-                document.getElementById('row-price').style.display = 'flex';
-                document.getElementById('modal-price').innerText = event.price;
-            } else {
-                document.getElementById('row-price').style.display = 'none';
-            }
-
-            // Google Maps Link
-            const mapQuery = encodeURIComponent(event.address + " " + event.title);
-            document.getElementById('modal-map-btn').onclick = () => {
-                window.open(`https://www.google.com/maps/search/?api=1&query=${mapQuery}`, '_blank');
-            };
-
-            document.getElementById('detail-modal').classList.add('open');
+        // 8. 介面互動
+        function toggleToolbox() {
+            document.getElementById('toolbox-overlay').classList.toggle('open');
         }
 
-        function closeModal() {
-            document.getElementById('detail-modal').classList.remove('open');
-        }
-        
-        document.getElementById('detail-modal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-
-        // 頁面切換
-        function switchPage(pageId, navEl) {
+        function switchPage(id, el) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.getElementById('page-' + pageId).classList.add('active');
-            
+            document.getElementById('page-'+id).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            navEl.classList.add('active');
-
-            if(pageId === 'map' && map) {
-                setTimeout(() => map.invalidateSize(), 200);
-            }
+            el.classList.add('active');
+            if(id === 'map' && map) setTimeout(() => map.invalidateSize(), 200);
         }
 
-        // 匯率換算
+        function openModal(ev) {
+            document.getElementById('modal-title').innerText = ev.title;
+            document.getElementById('modal-type').innerText = ev.type;
+            document.getElementById('modal-time').innerText = ev.time;
+            document.getElementById('modal-address').innerText = ev.address;
+            document.getElementById('modal-note').innerText = ev.note;
+            document.getElementById('detail-modal').classList.add('open');
+            
+            const btnGroup = document.getElementById('modal-btn-group');
+            btnGroup.innerHTML = '';
+            
+            // Google Maps
+            const mapBtn = document.createElement('a');
+            mapBtn.className = 'action-btn';
+            mapBtn.innerHTML = '<i class="fa-solid fa-map-location-dot"></i> Google Maps';
+            mapBtn.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ev.title + " " + ev.address)}`;
+            mapBtn.target = "_blank";
+            btnGroup.appendChild(mapBtn);
+
+            // Tabelog
+            if(ev.tabelogUrl) {
+                const tb = document.createElement('a');
+                tb.className = 'action-btn tabelog-btn';
+                tb.innerHTML = '<i class="fa-solid fa-utensils"></i> Tabelog';
+                tb.href = ev.tabelogUrl; tb.target = "_blank";
+                btnGroup.appendChild(tb);
+            }
+            // Booking
+            if(ev.bookingUrl) {
+                const bb = document.createElement('a');
+                bb.className = 'action-btn booking-btn';
+                bb.innerHTML = '<i class="fa-solid fa-ticket"></i> 預訂 / 詳情';
+                bb.href = ev.bookingUrl; bb.target = "_blank";
+                btnGroup.appendChild(bb);
+            }
+        }
+        function closeModal() { document.getElementById('detail-modal').classList.remove('open'); }
+
+        // 9. 匯率計算
         function calcRate(type) {
-            const rate = 0.052; // 假設匯率
-            const jpyEl = document.getElementById('jpy-input');
-            const hkdEl = document.getElementById('hkd-input');
-
-            if(type === 'jpy') {
-                hkdEl.value = (jpyEl.value * rate).toFixed(1);
-            } else {
-                jpyEl.value = (hkdEl.value / rate).toFixed(0);
-            }
+            const rate = 0.052; 
+            const jpy = document.getElementById('jpy-input');
+            const hkd = document.getElementById('hkd-input');
+            if(type === 'jpy') hkd.value = (jpy.value * rate).toFixed(1);
+            else jpy.value = (hkd.value / rate).toFixed(0);
         }
-
-        // 一鍵報平安
-        function sendSafetyMessage() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(pos) {
-                    const link = `https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                    const msg = `Hello! 我在京都玩得很開心，現在位置在這裡：${link}`;
-                    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-                }, () => {
-                    window.open(`https://wa.me/?text=${encodeURIComponent("Hello! 我在京都玩得很開心！")}`, '_blank');
-                });
-            } else {
-                alert("瀏覽器不支援定位");
-            }
-        }
-
-        // --- 4. 地圖初始化 (Leaflet) ---
-        var map = L.map('map-container').setView([35.0034, 135.7681], 13); // Center on Gion/Kawaramachi
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
         
-        // 標記幾個大地標
-        L.marker([34.9858, 135.7588]).addTo(map).bindPopup("京都車站");
-        L.marker([35.0037, 135.7786]).addTo(map).bindPopup("八坂神社");
-        L.marker([34.9346, 135.7593]).addTo(map).bindPopup("月桂冠大倉紀念館");
-
-        // 啟動
-        init();
-
+        // 10. 報平安
+        function sendSafetyMessage() {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    const link = `https://maps.google.com/?q=${pos.coords.latitude},${pos.coords.longitude}`;
+                    const msg = encodeURIComponent(`我在京都玩得很開心，目前位置：${link}`);
+                    window.open(`https://wa.me/?text=${msg}`, '_blank');
+                },
+                () => alert("無法定位")
+            );
+        }
     </script>
 </body>
 </html>
