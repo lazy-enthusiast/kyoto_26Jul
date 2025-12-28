@@ -14,9 +14,9 @@
             --bg-color: #3E3C3A;       /* 煤竹色 - 背景 */
             --card-color: #E8E8E8;     /* 灰白 - 卡片 */
             --accent-color: #E95464;   /* 朱紅 - 強調/按鈕 */
-            --text-on-dark: #FFFFFB;   /* 象牙白 - 深底文字 */
-            --text-on-light: #2F2F2F;  /* 墨黑 - 淺底文字 */
-            --menu-bg: #2b2a29;        /* 選單背景 */
+            --text-on-dark: #FFFFFB;   /* 象牙白 */
+            --text-on-light: #2F2F2F;  /* 墨黑 */
+            --menu-bg: #2b2a29;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -27,9 +27,7 @@
             color: var(--text-on-dark);
             margin: 0; padding: 0;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            display: flex; flex-direction: column; overflow: hidden;
         }
 
         /* --- Header --- */
@@ -43,53 +41,39 @@
         }
         header h1 { margin: 0; font-size: 1.2rem; font-family: "Shippori Mincho", serif; letter-spacing: 1px; }
         
-        /* Header Icons Area */
         .header-icons { display: flex; gap: 20px; align-items: center; }
-        .header-btn { color: var(--text-on-dark); font-size: 1.2rem; cursor: pointer; text-decoration: none; position: relative; }
-        .header-btn i { transition: transform 0.2s; }
-        .header-btn:active i { transform: scale(0.9); }
+        .header-btn { color: var(--text-on-dark); font-size: 1.2rem; cursor: pointer; text-decoration: none; position: relative;}
         .fan-btn i { color: var(--accent-color); }
 
-        /* --- Main Content Area --- */
-        main {
-            flex: 1;
-            overflow-y: hidden; /* 控制各頁面自己滾動 */
-            position: relative;
-        }
+        /* --- Main Content --- */
+        main { flex: 1; overflow-y: hidden; position: relative; }
 
-        /* 頁面通用樣式 */
         .page {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            overflow-y: auto;
-            padding: 0 0 80px 0; /* 留白給底部導航 */
-            display: none; opacity: 0;
-            transition: opacity 0.3s ease;
+            overflow-y: auto; padding: 0 0 80px 0;
+            display: none; opacity: 0; transition: opacity 0.3s ease;
             background-color: var(--bg-color);
         }
         .page.active { display: block; opacity: 1; z-index: 10; }
         
-        /* 子頁面 (Full Screen Sub-pages) - 覆蓋底部導航 */
+        /* 子頁面 (Overlay) */
         .sub-page {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: var(--bg-color);
-            z-index: 2000; /* 最高層級 */
+            background-color: var(--bg-color); z-index: 2000;
             display: flex; flex-direction: column;
             transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
         }
         .sub-page.open { transform: translateX(0); }
-
         .sub-header {
-            padding: 15px 20px;
-            background: var(--menu-bg);
+            padding: 15px 20px; background: var(--menu-bg);
             border-bottom: 1px solid rgba(255,255,255,0.1);
             display: flex; align-items: center; gap: 15px;
         }
-        .back-btn { font-size: 1.2rem; color: var(--accent-color); cursor: pointer; background: none; border: none; padding: 5px; }
+        .back-btn { font-size: 1.2rem; color: var(--accent-color); background: none; border: none; padding: 5px; cursor: pointer;}
         .sub-header h2 { margin: 0; font-size: 1.1rem; font-family: "Shippori Mincho", serif; }
-        
         .sub-content { flex: 1; overflow-y: auto; padding: 20px; }
 
-        /* --- 1. 行程樣式 (Itinerary) --- */
+        /* --- Timeline & Cards --- */
         .date-selector-container {
             position: sticky; top: 0; background: var(--bg-color); z-index: 90;
             padding: 15px 20px 5px 20px; margin: 0 -20px 20px -20px;
@@ -128,28 +112,30 @@
         }
         .card:active { transform: scale(0.98); }
         .card-time { font-size: 0.85rem; color: var(--accent-color); font-weight: 700; display: block; margin-bottom: 6px; }
-        .card-title { font-size: 1.1rem; font-weight: 700; margin: 0 0 8px 0; font-family: "Shippori Mincho", serif; line-height: 1.4; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin: 0 0 8px 0; font-family: "Shippori Mincho", serif; line-height: 1.4; padding-right: 10px;}
         
-        .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; }
+        /* 預算金額顯示 */
+        .card-price {
+            position: absolute; bottom: 12px; right: 15px;
+            font-weight: bold; color: #d63345; font-size: 0.9rem;
+            background: rgba(255,255,255,0.6); padding: 2px 6px; border-radius: 4px;
+        }
+
+        .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px; max-width: 70%; }
         .card-tag { font-size: 0.7rem; background: #D0D0D0; padding: 3px 8px; border-radius: 4px; color: #444; }
         .card-tag.highlight { background: #ffe4e6; color: #d63345; border: 1px solid #fab1b8; }
         .card-tag.tips { background: #e0f2fe; color: #0369a1; }
 
-        /* --- 2. 百寶箱主頁樣式 (Tools Hub) --- */
-        .tools-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 10px;
-        }
+        /* --- Tools Grid --- */
+        .tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 10px; }
         .tool-btn {
             background: rgba(255,255,255,0.08); padding: 25px 15px;
             border-radius: 16px; text-align: center;
             border: 1px solid rgba(255,255,255,0.05); cursor: pointer;
-            transition: background 0.2s;
         }
-        .tool-btn:active { background: rgba(255,255,255,0.15); }
         .tool-btn i { font-size: 2.2rem; color: var(--accent-color); margin-bottom: 12px; display: block; }
-        .tool-btn span { font-size: 1rem; font-weight: 500; }
-        
-        /* --- 3. 清單與功能子頁面樣式 --- */
+
+        /* --- Lists --- */
         .checklist-item {
             background: rgba(255,255,255,0.08); padding: 15px; margin-bottom: 12px;
             border-radius: 8px; display: flex; align-items: center; gap: 15px;
@@ -158,51 +144,33 @@
         .checklist-item.checked span { text-decoration: line-through; }
         .checklist-item input { width: 22px; height: 22px; accent-color: var(--accent-color); }
         
-        .rate-calc { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; margin-top: 20px; }
-        .rate-calc input {
-            width: 100%; padding: 15px; margin: 10px 0; font-size: 1.2rem;
-            background: rgba(0,0,0,0.3); border: 1px solid #555; color: white; border-radius: 8px; text-align: center;
-        }
-        
-        .safety-block {
-            text-align: center; padding: 30px 20px;
-            background: linear-gradient(135deg, #2E4B71, #1a2e47);
-            border-radius: 16px; margin-bottom: 20px;
-        }
-
-        /* --- Footer Nav --- */
+        /* --- Footer --- */
         nav.bottom-nav {
             position: fixed; bottom: 0; width: 100%;
             background-color: var(--menu-bg);
             display: flex; justify-content: space-around;
-            padding: 10px 0 25px 0; border-top: 1px solid rgba(255,255,255,0.1);
-            z-index: 100;
+            padding: 10px 0 25px 0; border-top: 1px solid rgba(255,255,255,0.1); z-index: 100;
         }
-        .nav-item {
-            color: #888; text-align: center; font-size: 0.75rem; cursor: pointer; width: 33%;
-        }
+        .nav-item { color: #888; text-align: center; font-size: 0.75rem; cursor: pointer; width: 33%; }
         .nav-item i { display: block; font-size: 1.4rem; margin-bottom: 4px; }
         .nav-item.active { color: var(--accent-color); }
 
-        /* --- Modal (行程詳情) --- */
+        /* --- Modal --- */
         .modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 3000;
-            justify-content: center; align-items: end;
-            backdrop-filter: blur(3px);
+            justify-content: center; align-items: end; backdrop-filter: blur(3px);
         }
         .modal.open { display: flex; }
         .modal-content {
             background: var(--card-color); color: var(--text-on-light);
             width: 100%; max-width: 600px; max-height: 85vh;
             border-radius: 20px 20px 0 0; padding: 25px;
-            overflow-y: auto; position: relative;
-            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto; animation: slideUp 0.3s ease;
         }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         .close-modal { position: absolute; top: 15px; right: 20px; font-size: 1.8rem; color: #888; cursor: pointer; }
         
-        /* 詳情內文樣式 */
         .info-row { margin: 12px 0; display: flex; align-items: flex-start; gap: 12px; font-size: 0.95rem; line-height: 1.6; }
         .info-row i { color: var(--accent-color); margin-top: 4px; width: 20px; text-align: center; }
         .note-box {
@@ -222,7 +190,6 @@
             text-decoration: none; border-radius: 10px;
             font-weight: bold; font-size: 1rem; border: none; cursor: pointer;
         }
-
         #map-container { height: 100%; width: 100%; }
 
     </style>
@@ -232,7 +199,7 @@
     <header>
         <h1>KYOTO 2026</h1>
         <div class="header-icons">
-            <a href="googletranslate://" onclick="checkTranslate()" class="header-btn" title="Google Translate">
+            <a href="googletranslate://" class="header-btn" title="Google Translate">
                 <i class="fa-solid fa-language"></i>
             </a>
             <a href="#" class="header-btn fan-btn" onclick="openToolsPage(); return false;">
@@ -258,119 +225,76 @@
             <h2 style="text-align:center; margin: 30px 0 20px 0; font-family:'Shippori Mincho',serif;">旅人百寶箱</h2>
             <div class="tools-grid">
                 <div class="tool-btn" onclick="openSubPage('packing')">
-                    <i class="fa-solid fa-suitcase"></i>
-                    <span>行李清單</span>
+                    <i class="fa-solid fa-suitcase"></i><span>行李清單</span>
                 </div>
                 <div class="tool-btn" onclick="openSubPage('shopping')">
-                    <i class="fa-solid fa-basket-shopping"></i>
-                    <span>購物清單</span>
+                    <i class="fa-solid fa-basket-shopping"></i><span>購物清單</span>
                 </div>
                 <div class="tool-btn" onclick="openSubPage('rate')">
-                    <i class="fa-solid fa-yen-sign"></i>
-                    <span>匯率換算</span>
+                    <i class="fa-solid fa-yen-sign"></i><span>匯率換算</span>
                 </div>
                 <div class="tool-btn" onclick="openSubPage('safety')">
-                    <i class="fa-solid fa-user-shield"></i>
-                    <span>安全報平安</span>
+                    <i class="fa-solid fa-user-shield"></i><span>安全報平安</span>
                 </div>
                 <div class="tool-btn" onclick="openTipsModal()">
-                    <i class="fa-regular fa-compass"></i>
-                    <span>路痴救星</span>
+                    <i class="fa-regular fa-compass"></i><span>路痴救星</span>
                 </div>
                 <div class="tool-btn" onclick="alert('警察: 110\n消防: 119\n外交部: 800-0885-0885')">
-                    <i class="fa-solid fa-phone-medical"></i>
-                    <span>緊急聯絡</span>
+                    <i class="fa-solid fa-phone-medical"></i><span>緊急聯絡</span>
                 </div>
             </div>
         </div>
 
         <div id="subpage-packing" class="sub-page">
-            <div class="sub-header">
-                <button class="back-btn" onclick="closeSubPage('packing')"><i class="fa-solid fa-arrow-left"></i></button>
-                <h2>行李清單</h2>
-            </div>
-            <div class="sub-content" id="packing-list-container">
-                </div>
+            <div class="sub-header"><button class="back-btn" onclick="closeSubPage('packing')"><i class="fa-solid fa-arrow-left"></i></button><h2>行李清單</h2></div>
+            <div class="sub-content" id="packing-list-container"></div>
         </div>
-
         <div id="subpage-shopping" class="sub-page">
-            <div class="sub-header">
-                <button class="back-btn" onclick="closeSubPage('shopping')"><i class="fa-solid fa-arrow-left"></i></button>
-                <h2>購物清單</h2>
-            </div>
-            <div class="sub-content" id="shopping-list-container">
-                </div>
+            <div class="sub-header"><button class="back-btn" onclick="closeSubPage('shopping')"><i class="fa-solid fa-arrow-left"></i></button><h2>購物清單</h2></div>
+            <div class="sub-content" id="shopping-list-container"></div>
         </div>
-
         <div id="subpage-rate" class="sub-page">
-            <div class="sub-header">
-                <button class="back-btn" onclick="closeSubPage('rate')"><i class="fa-solid fa-arrow-left"></i></button>
-                <h2>匯率換算</h2>
-            </div>
+            <div class="sub-header"><button class="back-btn" onclick="closeSubPage('rate')"><i class="fa-solid fa-arrow-left"></i></button><h2>匯率換算</h2></div>
             <div class="sub-content" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:80%;">
-                <div class="rate-calc" style="width:100%;">
-                    <label>日幣 (JPY)</label>
-                    <input type="number" id="jpy-input" placeholder="¥" oninput="calcRate('jpy')">
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; width:100%;">
+                    <label>日幣 (JPY)</label><input type="number" id="jpy-input" placeholder="¥" oninput="calcRate('jpy')" style="width: 100%; padding: 15px; margin: 10px 0; font-size: 1.2rem; background: rgba(0,0,0,0.3); border: 1px solid #555; color: white; border-radius: 8px; text-align: center;">
                     <div style="text-align:center; font-size:1.5rem; margin:10px 0; color:var(--accent-color);">⇅</div>
-                    <label>港幣 (HKD)</label>
-                    <input type="number" id="hkd-input" placeholder="$" oninput="calcRate('hkd')">
+                    <label>港幣 (HKD)</label><input type="number" id="hkd-input" placeholder="$" oninput="calcRate('hkd')" style="width: 100%; padding: 15px; margin: 10px 0; font-size: 1.2rem; background: rgba(0,0,0,0.3); border: 1px solid #555; color: white; border-radius: 8px; text-align: center;">
                     <p style="text-align:center; opacity:0.6; font-size:0.8rem; margin-top:20px;">*預設匯率 0.052</p>
                 </div>
             </div>
         </div>
-
         <div id="subpage-safety" class="sub-page">
-            <div class="sub-header">
-                <button class="back-btn" onclick="closeSubPage('safety')"><i class="fa-solid fa-arrow-left"></i></button>
-                <h2>安全功能</h2>
-            </div>
+            <div class="sub-header"><button class="back-btn" onclick="closeSubPage('safety')"><i class="fa-solid fa-arrow-left"></i></button><h2>安全功能</h2></div>
             <div class="sub-content">
-                <div class="safety-block" onclick="sendSafetyMessage()">
+                <div style="text-align: center; padding: 30px 20px; background: linear-gradient(135deg, #2E4B71, #1a2e47); border-radius: 16px; margin-bottom: 20px;" onclick="sendSafetyMessage()">
                     <i class="fa-brands fa-whatsapp" style="font-size:3rem; color:white; margin-bottom:15px;"></i>
                     <h3 style="margin:0 0 10px 0;">一鍵報平安 (WhatsApp)</h3>
-                    <p style="opacity:0.8; margin:0;">按此發送位置給家人<br>(不會顯示緊急字眼)</p>
+                    <p style="opacity:0.8; margin:0;">按此發送位置給家人</p>
                 </div>
-                
                 <h3 style="border-bottom:1px solid #555; padding-bottom:10px; margin-top:30px;">緊急資訊</h3>
-                <div class="checklist-item" onclick="alert('撥打 110')">
-                    <i class="fa-solid fa-shield-halved" style="color:var(--accent-color);"></i>
-                    <span>警察局: 110</span>
-                </div>
-                <div class="checklist-item" onclick="alert('撥打 119')">
-                    <i class="fa-solid fa-truck-medical" style="color:var(--accent-color);"></i>
-                    <span>救護車/消防: 119</span>
-                </div>
-                <div class="checklist-item">
-                    <i class="fa-solid fa-building-columns" style="color:var(--accent-color);"></i>
-                    <span>駐日代表處: 03-3280-7111</span>
-                </div>
+                <div class="checklist-item" onclick="alert('110')"><i class="fa-solid fa-shield-halved" style="color:var(--accent-color);"></i><span>警察局: 110</span></div>
+                <div class="checklist-item" onclick="alert('119')"><i class="fa-solid fa-truck-medical" style="color:var(--accent-color);"></i><span>救護/消防: 119</span></div>
             </div>
         </div>
 
     </main>
 
     <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchMainPage('itinerary', this)">
-            <i class="fa-solid fa-calendar-days"></i> 行程
-        </div>
-        <div class="nav-item" onclick="switchMainPage('map', this)">
-            <i class="fa-solid fa-map"></i> 地圖
-        </div>
-        <div class="nav-item" onclick="openToolsPage()">
-            <i class="fa-solid fa-fan"></i> 百寶箱
-        </div>
+        <div class="nav-item active" onclick="switchMainPage('itinerary', this)"><i class="fa-solid fa-calendar-days"></i> 行程</div>
+        <div class="nav-item" onclick="switchMainPage('map', this)"><i class="fa-solid fa-map"></i> 地圖</div>
+        <div class="nav-item" onclick="openToolsPage()"><i class="fa-solid fa-fan"></i> 百寶箱</div>
     </nav>
 
     <div id="detail-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal()">×</span>
-            <div class="modal-header">
-                <h2 id="modal-title">標題</h2>
-                <span id="modal-type" class="sub">類型</span>
-            </div>
+            <div class="modal-header"><h2 id="modal-title">標題</h2><span id="modal-type" class="sub">類型</span></div>
             <div class="modal-body">
                 <div class="info-row"><i class="fa-regular fa-clock"></i><span id="modal-time">時間</span></div>
                 <div class="info-row"><i class="fa-solid fa-location-dot"></i><span id="modal-address">地址</span></div>
+                <div class="info-row" id="modal-price-row"><i class="fa-solid fa-money-bill-wave"></i><span id="modal-price"></span></div>
+                
                 <div class="note-box">
                     <div style="font-weight:bold; margin-bottom:8px; color:var(--accent-color);">攻略與 TIPS：</div>
                     <span id="modal-note">內容...</span>
@@ -383,136 +307,110 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // --- 資料庫 (完整行程) ---
+        // --- DATA: 最終行程資料庫 (含預算) ---
         const scheduleData = {
             "day1": {
                 "date": "7/15 (三)",
                 "events": [
-                    { time: "14:00 - 16:00", title: "抵達與 Check-in", type: "交通", address: "京都車站八條口", note: "<b>路痴TIPS：</b>下車處為八條口(背面)，抬頭找白色針狀京都塔為正面(北)。<br><b>交通：</b>關西機場1F 8號搭利木津巴士。<br>Check-in 完放行李。", link: "https://www.klook.com/activity/1541-kix-airport-limousine-bus-transfer-kyoto/", linkText: "Klook 巴士預約", tags: ["移動", "路痴TIPS"] },
-                    { time: "16:00 - 18:00", title: "黃櫻 Kappa Country", type: "清酒", address: "京都市伏見區塩屋町228", note: "<b>必喝：</b>中庭黃櫻酒場試飲 Lucky Cat/Dog 啤酒或夏季柚子酒。<br><b>交通：</b>近鐵「桃山御陵前」站，進大手筋商店街，見瑞穗銀行左轉。<br>河童主題館很可愛，適合獨旅慢慢品味。", tags: ["清酒", "河童"] },
-                    { time: "18:00 - 19:00", title: "AEON Mall (Kohyo 超市)", type: "購物", address: "京都站八條口 Sakura館1樓", note: "<b>採買清單：</b>枝豆 (熱煮配酒)、水茄子漬物、刺身拼盤。<br>買回酒店晚上小酌。", tags: ["超市", "補給"] },
-                    { time: "午餐 (若早到)", title: "月之藏人", type: "美食", address: "伏見區", note: "<b>必點：</b>自家製汲み上げ豆腐、清酒粕烤雞。<br>舊酒造改建，氛圍好。", link: "https://tabelog.com/en/", linkText: "Tabelog 預約", tags: ["美食"] },
-                    { time: "晚餐", title: "Jojo Izakaya", type: "美食", address: "京都市下京區", note: "<b>必點：</b>烤洋蔥整顆 (爆汁)、季節野菜炭火燒。<br>五十棲系列，若訂不到 Jojo 改訂 Isoya。", link: "https://tabelog.com/en/", linkText: "Tabelog 預約", tags: ["居酒屋"] }
+                    { time: "14:00 - 16:00", title: "抵達京都站 (Check-in)", type: "交通", price: "¥2,600", address: "京都車站八條口", note: "<b>交通：</b>關西機場1F 8號搭利木津巴士。<br><b>路痴TIPS：</b>下車在八條口(背面)，抬頭找白色京都塔為正面(北)。<br>Klook 巴士票約 HKD 130。", link: "https://www.klook.com/activity/1541-kix-airport-limousine-bus-transfer-kyoto/", tags: ["移動", "路痴TIPS"] },
+                    { time: "午餐 (若早到)", title: "月之藏人", type: "美食", price: "¥2,500", address: "伏見區", note: "<b>必點：</b>自家製豆腐、酒粕烤雞。<br>舊酒造改建，氛圍懷舊。", link: "https://tabelog.com/en/", tags: ["美食"] },
+                    { time: "16:00 - 18:00", title: "黃櫻 Kappa Country", type: "清酒", price: "¥2,000", address: "伏見區塩屋町228", note: "<b>必喝：</b>Lucky Cat/Dog 精釀啤酒、夏季柚子酒。<br><b>交通：</b>近鐵桃山御陵前站，見瑞穗銀行左轉。<br>河童主題館可愛好拍。", tags: ["清酒"] },
+                    { time: "18:00 - 19:00", title: "AEON Mall 超市", type: "購物", price: "¥1,500", address: "京都站八條口 Sakura館", note: "買枝豆、水茄子漬物、刺身拼盤回酒店。", tags: ["超市", "補給"] },
+                    { time: "晚餐", title: "Jojo Izakaya", type: "美食", price: "¥4,500", address: "四條烏丸", note: "<b>必點：</b>烤洋蔥整顆(爆汁)、季節野菜炭火燒。<br>五十棲系列，若訂不到改 Isoya。", link: "https://tabelog.com/en/", tags: ["居酒屋"] }
                 ]
             },
             "day2": {
                 "date": "7/16 (四)",
                 "events": [
-                    { time: "早餐", title: "Ogawa Coffee", type: "美食", address: "京都站前地下街", note: "必點：京都早餐套餐 (厚片吐司+特調拿鐵)。", tags: ["咖啡"] },
-                    { time: "10:00 - 12:00", title: "月桂冠大倉紀念館", type: "景點", address: "京都市伏見區南浜町247", note: "<b>重點：</b>試飲夏季冰鎮生酒。必喝中庭伏水井水。<br><b>交通：</b>近鐵桃山御陵前站步行10分。", link: "https://www.gekkeikan.com/museum/", linkText: "官網資訊", tags: ["清酒", "歷史"] },
-                    { time: "12:00 - 13:30", title: "午餐：鳥せい 本店", type: "美食", address: "伏見區上油掛町186", note: "<b>路痴TIPS：</b>認大酒桶清水店+排隊人潮。<br><b>必點：</b>雞肉串燒拼盤 + 鐵桶生原酒。<br><strong>強烈建議預約！</strong>", link: "https://tabelog.com/en/", linkText: "Tabelog 預約", tags: ["燒鳥", "排隊店"] },
-                    { time: "13:30 - 15:30", title: "伏見酒蔵小路", type: "體驗", address: "伏見區納屋町115", note: "<b>必點：</b>十八藏試飲 Set (小杯多樣，拍照美)。", link: "https://www.tablecheck.com/en/shops/fushimi-sakagura-kouji/reserve", linkText: "TableCheck 預約", tags: ["清酒", "打卡"] },
-                    { time: "16:00 - 17:00", title: "MY ONLY FRAGRANCE", type: "體驗", address: "中京區下丸屋町401-2", note: "調製專屬香水，標籤印上旅程日期。<br>交通：伏見桃山站搭京阪至「三條站」。", link: "https://www.kkday.com/en-sg/product/248954", linkText: "KKday/官網 預約", tags: ["香氛"] },
-                    { time: "18:00 - 20:00", title: "晚餐：Rokkaku Ace", type: "美食", address: "中京區", note: "<b>必點：</b>半熟蛋馬鈴薯沙拉 + 和牛塔塔。", link: "https://tabelog.com/en/", linkText: "Tabelog 預約", tags: ["居酒屋"] },
-                    { time: "20:00 後", title: "祇園祭「宵山」步行", type: "祭典", address: "四條烏丸一帶", note: "<b>獨旅重點：</b>去「長刀鉾」買個「粽 (Chimaki)」保平安。<br>今天是步行者天國，從晚餐處步行進入。", tags: ["祭典", "必去"] }
+                    { time: "早餐", title: "Ogawa Coffee", type: "美食", price: "¥1,200", address: "京都站前地下", note: "<b>必點：</b>京都早餐套餐 (厚片吐司+特調拿鐵)。", tags: ["咖啡"] },
+                    { time: "10:00 - 12:00", title: "月桂冠大倉紀念館", type: "景點", price: "¥600", address: "伏見區南浜町", note: "<b>重點：</b>試飲夏季冰鎮生酒。必喝中庭伏水井水。<br><b>交通：</b>近鐵桃山御陵前站步行10分。", link: "https://www.gekkeikan.com/museum/", tags: ["清酒", "歷史"] },
+                    { time: "12:00 - 13:30", title: "鳥せい 本店", type: "美食", price: "¥2,500", address: "伏見區上油掛町", note: "<b>必點：</b>雞肉串燒拼盤 + 鐵桶生原酒。<br><b>TIPS：</b>認大酒桶。建議預約！", link: "https://tabelog.com/en/", tags: ["燒鳥", "排隊店"] },
+                    { time: "13:30 - 15:30", title: "伏見酒蔵小路", type: "體驗", price: "¥2,500", address: "伏見區納屋町", note: "<b>必點：</b>十八藏試飲 Set (小杯多樣，拍照美)。", link: "https://www.tablecheck.com/en/shops/fushimi-sakagura-kouji/reserve", tags: ["清酒"] },
+                    { time: "16:00 - 17:00", title: "MY ONLY FRAGRANCE", type: "體驗", price: "¥6,000", address: "中京區", note: "調製專屬香水，印上旅程日期。<br>交通：京阪三條站步行5分。", link: "https://www.kkday.com/en-sg/product/248954", tags: ["香氛"] },
+                    { time: "18:00 - 20:00", title: "Rokkaku Ace", type: "美食", price: "¥4,000", address: "中京區", note: "<b>必點：</b>半熟蛋馬鈴薯沙拉 + 和牛塔塔。", link: "https://tabelog.com/en/", tags: ["居酒屋"] },
+                    { time: "20:00 後", title: "祇園祭「宵山」步行", type: "祭典", price: "¥1,000", address: "四條烏丸", note: "<b>必做：</b>去「長刀鉾」買個「粽」保平安。<br>今天是步行者天國，點燈山鉾很美。", tags: ["祭典", "必去"] }
                 ]
             },
             "day3": {
                 "date": "7/17 (五)",
                 "events": [
-                    { time: "09:00 - 12:00", title: "山鉾巡行 (前祭)", type: "祭典", address: "京都市役所前", note: "<b>路痴TIPS：</b>避開主路口。建議在「京都市役所前」找樹蔭。<br>注意防曬與財物。", tags: ["祭典", "高潮"] },
-                    { time: "午餐", title: "Monsen (門扇)", type: "美食", address: "木屋町", note: "<b>必點：</b>雞骨拉麵 (Tori Ramen)，濃郁適合配酒。", link: "https://tabelog.com/en/", linkText: "Tabelog 預約", tags: ["拉麵"] },
-                    { time: "13:30 - 16:30", title: "佐佐木酒造", type: "景點", address: "上京區日暮通椹木町", note: "洛中唯一酒造。酒款清爽辛口。<br>交通：地鐵「二條城前」站步行15分。", link: "https://wabunka-lux.jp/experiences/en_sasaki-shuzo/", linkText: "Wabunka 導覽", tags: ["酒造"] },
-                    { time: "17:00 - 18:00", title: "Lopia 超市 (Yodobashi)", type: "購物", address: "京都站 Yodobashi", note: "<b>必買：</b>自家製香腸、大份量壽司。", tags: ["超市", "肉食"] }
+                    { time: "09:00 - 12:00", title: "山鉾巡行 (前祭)", type: "祭典", price: "免費", address: "御池通", note: "<b>路痴TIPS：</b>不要在路口擠。去市役所前樹蔭，或巡行後去巷弄看山鉾歸位。", tags: ["祭典"] },
+                    { time: "午餐", title: "Monsen (門扇)", type: "美食", price: "¥1,200", address: "木屋町", note: "<b>必點：</b>雞骨拉麵，湯頭濃郁適合配酒。", link: "https://tabelog.com/en/", tags: ["拉麵"] },
+                    { time: "13:30 - 16:30", title: "佐佐木酒造", type: "景點", price: "¥2,000", address: "上京區", note: "洛中唯一酒造 (佐佐木藏之介老家)。酒款清爽辛口。<br>地鐵二條城前站步行15分。", link: "https://wabunka-lux.jp/experiences/en_sasaki-shuzo/", tags: ["酒造"] },
+                    { time: "17:00 - 18:00", title: "Lopia 超市", type: "購物", price: "¥2,000", address: "京都站 Yodobashi", note: "肉類極強。必買自家製香腸、大份量壽司。", tags: ["超市"] }
                 ]
             },
-            "day4": {
+             "day4": {
                 "date": "7/18 (六)",
                 "events": [
-                    { time: "早餐 (8:00前)", title: "伏見稻荷大社", type: "景點", address: "伏見稻荷大社", note: "<b>攻略：</b>8點前到避人潮。走千本鳥居到「奧社」許願即可折返。", tags: ["神社", "拍照"] },
-                    { time: "11:30 - 14:00", title: "藤岡酒造 (蒼空)", type: "品酒", address: "伏見區", note: "<b>必訪：</b>玻璃屋酒吧「酒蔵Bar En」。<br><b>必點：</b>蒼空純米大吟釀。", tags: ["清酒", "文青"] },
-                    { time: "午餐", title: "Nagomi Ikeyan", type: "美食", address: "嵐山", note: "交通：京都站搭 JR嵯峨野線 到 嵯峨嵐山站。", link: "https://tabelog.com/en/", linkText: "Tabelog 預約", tags: ["嵐山"] },
-                    { time: "14:00 - 16:00", title: "香道：天香堂", type: "體驗", address: "嵐山", note: "<b>體驗：</b>聞香或製作「匂袋」。Tatami室園景浪漫。", link: "https://tenkhodou.com/", linkText: "官網預約", tags: ["香氛"] },
-                    { time: "加碼", title: "野宮神社", type: "景點", address: "嵐山竹林入口", note: "求良緣摸那塊黑色的「龜石」，許願一年內實現。", tags: ["結緣"] },
-                    { time: "16:30 - 17:30", title: "業務超市", type: "購物", address: "業務超市", note: "<b>必買：</b>柚子胡椒醬。", tags: ["超市"] }
+                    { time: "早餐 (8:00前)", title: "伏見稻荷大社", type: "景點", price: "¥1,500", address: "伏見稻荷", note: "<b>攻略：</b>8點前到避人潮。早餐吃 Vermillion Espresso Bar。<br>走千本鳥居到「奧社」許願即可。", tags: ["神社"] },
+                    { time: "11:30 - 14:00", title: "藤岡酒造 (蒼空)", type: "品酒", price: "¥2,000", address: "伏見", note: "<b>必訪：</b>玻璃屋酒吧「酒蔵Bar En」。<br><b>必點：</b>蒼空純米大吟釀，坐吧台看釀酒桶。", tags: ["清酒", "文青"] },
+                    { time: "午餐", title: "Nagomi Ikeyan", type: "美食", price: "¥2,500", address: "嵐山", note: "嵐山午餐。交通：JR嵯峨野線。", link: "https://tabelog.com/en/", tags: ["嵐山"] },
+                    { time: "14:00 - 16:00", title: "天香堂 香道", type: "體驗", price: "¥3,500", address: "嵐山", note: "製作匂袋 (香包)。日式庭園氛圍浪漫。<br>需預約。", link: "https://tenkhodou.com/", tags: ["香氛"] },
+                    { time: "加碼", title: "野宮神社", type: "景點", price: "免費", address: "嵐山竹林入口", note: "求良緣摸黑色的「龜石」。源氏物語場景。", tags: ["結緣"] },
+                    { time: "16:30 - 17:30", title: "業務超市", type: "購物", price: "¥1,000", address: "市區", note: "買柚子胡椒醬。", tags: ["超市"] }
                 ]
             },
             "day5": {
                 "date": "7/19 (日)",
                 "events": [
-                    { time: "早餐", title: "Sentido", type: "美食", address: "烏丸御池", note: "<b>必點：</b>熱壓三明治。", tags: ["咖啡"] },
-                    { time: "10:00 - 13:00", title: "錦市場 & 錦天滿宮", type: "景點", address: "錦市場", note: "<b>必買：</b>打田漬物(柴漬)。<br><b>酒鬼Tip：</b>去「津之喜酒舖」找老闆推薦酒。", tags: ["市場"] },
-                    { time: "下午", title: "下鴨神社 & 河合神社", type: "景點", address: "出町柳", note: "<b>重點：</b>河合神社必買「鏡繪馬」畫臉祈求變美。", tags: ["神社", "美容"] },
-                    { time: "晚餐", title: "Giro Giro Hitoshina", type: "美食", address: "松原通", note: "現代懷石料理，適合獨旅。", link: "https://tabelog.com/en/", linkText: "Tabelog 預約", tags: ["懷石"] }
+                    { time: "早餐", title: "Sentido", type: "美食", price: "¥1,000", address: "烏丸御池", note: "<b>必點：</b>熱壓三明治。", tags: ["咖啡"] },
+                    { time: "10:00 - 13:00", title: "錦市場 & 錦天滿宮", type: "景點", price: "¥3,000", address: "錦市場", note: "<b>必買：</b>打田漬物(柴漬)。<br><b>Tips：</b>去「津之喜酒舖」找老闆推薦酒。<br>摸天滿宮銅牛求智慧。", tags: ["市場"] },
+                    { time: "下午", title: "下鴨神社 & 河合神社", type: "景點", price: "¥800", address: "出町柳", note: "河合神社必買「鏡繪馬」化妝祈求變美 (第一美容神)。", tags: ["神社", "美容"] },
+                    { time: "晚餐", title: "Giro Giro Hitoshina", type: "美食", price: "¥6,000", address: "松原通", note: "現代懷石料理，適合獨旅。<br>替代方案：Hyoutei 居酒屋風格。", link: "https://tabelog.com/en/", tags: ["懷石"] }
                 ]
             },
             "day6": {
                 "date": "7/20 (一)",
                 "events": [
-                    { time: "上午", title: "京都文化博物館", type: "景點", address: "三條高倉", note: "欣賞舊銀行建築之美，逛工藝品店。", tags: ["藝文"] },
-                    { time: "14:00 - 16:00", title: "JR京都伊勢丹", type: "購物", address: "京都站", note: "<b>香水：</b>Shiro / Aux Paradis。<br><b>超市：</b>551肉包、下鴨茶寮便當。", tags: ["百貨"] },
-                    { time: "20:00 後", title: "後祭山鉾搭建", type: "祭典", address: "烏丸御池", note: "看職人「無釘」組裝大船鉾。", tags: ["後祭"] }
+                    { time: "上午", title: "京都文化博物館", type: "景點", price: "¥500", address: "三條高倉", note: "舊銀行建築，很美。逛京都工藝品店。", tags: ["藝文"] },
+                    { time: "14:00 - 16:00", title: "伊勢丹 Isetan", type: "購物", price: "¥10,000", address: "京都站", note: "<b>香水：</b>Shiro / Aux Paradis。<br><b>超市：</b>551肉包、下鴨茶寮便當。", tags: ["百貨"] },
+                    { time: "20:00 後", title: "後祭山鉾搭建", type: "祭典", price: "免費", address: "烏丸御池", note: "看職人「無釘」組裝大船鉾。人少悠閒。", tags: ["後祭"] }
                 ]
             },
             "day7": {
                 "date": "7/21 (二)",
                 "events": [
-                    { time: "08:00 - 11:00", title: "東寺 弘法市 (古董市集)", type: "市集", address: "東寺", note: "<b>每月21日限定！</b>早8-9點去寶物多。買古董清酒杯(猪口)。", tags: ["市集", "尋寶"] },
-                    { time: "下午", title: "Fresco / Life 超市", type: "購物", address: "二條城附近", note: "補充日常零食。", tags: ["超市"] },
-                    { time: "18:00 - 23:00", title: "後祭宵山 (通人版)", type: "祭典", address: "烏丸御池", note: "買杯路邊冰鎮清酒，坐著聽祇園囃子，享受寧靜夏夜。", tags: ["宵山"] }
+                    { time: "08:00 - 11:00", title: "東寺 弘法市 (古董市集)", type: "市集", price: "¥5,000", address: "東寺", note: "<b>每月21日限定！</b>早8-9點去。<br>目標：買一個古董清酒杯 (猪口)。", tags: ["市集", "尋寶"] },
+                    { time: "午餐", title: "市集攤販", type: "美食", price: "¥1,000", address: "東寺", note: "炒麵或廣島燒。", tags: ["B級美食"] },
+                    { time: "下午", title: "Fresco / Life 超市", type: "購物", price: "¥1,000", address: "二條城附近", note: "順路補充零食。", tags: ["超市"] },
+                    { time: "18:00 - 23:00", title: "後祭宵山 (通人版)", type: "祭典", price: "¥2,000", address: "烏丸御池", note: "看屏風祭。買杯路邊冰鎮清酒，坐著聽祇園囃子。", tags: ["宵山", "氛圍"] }
                 ]
             },
             "day8": {
                 "date": "7/22 (三)",
                 "events": [
-                    { time: "早餐", title: "Inoda Coffee 本店", type: "美食", address: "烏丸御池", note: "<b>必點：</b>京之朝食 (火腿+炒蛋+招牌咖啡)。", tags: ["老舖"] },
-                    { time: "12:00 - 13:00", title: "最後採買", type: "購物", address: "京都站", note: "必買：阿闍梨餅 (軟糯紅豆餅)。", tags: ["伴手禮"] },
-                    { time: "前往機場", title: "利木津巴士", type: "交通", address: "京都站八條口", note: "八條口搭車。", link: "https://www.klook.com/activity/1541-kix-airport-limousine-bus-transfer-kyoto/", linkText: "Klook 巴士票", tags: ["移動"] }
+                    { time: "早餐", title: "Inoda Coffee 本店", type: "美食", price: "¥1,600", address: "三條", note: "<b>必點：</b>京之朝食 (火腿+炒蛋+招牌咖啡)。", tags: ["老舖"] },
+                    { time: "12:00 - 13:00", title: "最後採買", type: "購物", price: "¥3,000", address: "京都站", note: "<b>必買：</b>阿闍梨餅 (軟糯紅豆餅)。", tags: ["伴手禮"] },
+                    { time: "前往機場", title: "利木津巴士", type: "交通", price: "¥2,600", address: "京都站八條口", note: "帶著戰利品回家！<br>Klook 巴士票預約。", link: "https://www.klook.com/activity/1541-kix-airport-limousine-bus-transfer-kyoto/", tags: ["移動"] }
                 ]
             }
         };
 
-        const shoppingList = ["阿闍梨餅 (京都站)", "551 Horai 肉包 (伊勢丹)", "下鴨茶寮 便當 (伊勢丹)", "古董猪口杯 (弘法市)", "MY ONLY FRAGRANCE 香水", "Shiro / Aux Paradis 香氛", "打田漬物 柴漬 (錦市場)", "津之喜酒舖 限定清酒", "業務超市 柚子胡椒", "長刀鉾 粽 (護身符)"];
-        const packingList = ["護照 & 影本", "ICOCA 卡 (充5000円)", "行動電源", "輕便雨傘/雨衣 (梅雨)", "防曬乳/帽子 (30度+)", "好走的鞋 (祭典步行)", "個人藥品", "網卡/漫遊"];
+        const shoppingList = ["阿闍梨餅", "551 肉包", "下鴨茶寮 便當", "古董猪口杯", "MY ONLY FRAGRANCE 香水", "Shiro / Aux Paradis", "打田漬物", "津之喜酒舖 清酒", "柚子胡椒", "長刀鉾 粽"];
+        const packingList = ["護照", "ICOCA", "行動電源", "雨具", "防曬", "好走的鞋", "藥品", "網卡"];
 
-        // --- 初始化 ---
-        function init() {
-            renderDateSelector();
-            renderTimeline("day1");
-            renderLists();
-        }
+        // --- Logic ---
+        function init() { renderDateSelector(); renderTimeline("day1"); renderLists(); }
 
-        // --- 核心導航邏輯 ---
         function switchMainPage(pageId, navEl) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + pageId).classList.add('active');
-            
-            // 更新 Bottom Nav 狀態
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             if(navEl) navEl.classList.add('active');
-
             if(pageId === 'map' && map) setTimeout(() => map.invalidateSize(), 200);
         }
 
-        // 風車按鈕 / 百寶箱按鈕
         function openToolsPage() {
             switchMainPage('tools');
-            // 讓底部導航的「百寶箱」亮起
-            const toolsNav = document.querySelectorAll('.nav-item')[2];
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            toolsNav.classList.add('active');
+            document.querySelectorAll('.nav-item')[2].classList.add('active');
         }
 
-        // 子頁面邏輯
-        function openSubPage(id) {
-            document.getElementById('subpage-' + id).classList.add('open');
-        }
-        function closeSubPage(id) {
-            document.getElementById('subpage-' + id).classList.remove('open');
-        }
+        function openSubPage(id) { document.getElementById('subpage-' + id).classList.add('open'); }
+        function closeSubPage(id) { document.getElementById('subpage-' + id).classList.remove('open'); }
 
-        // Google Translate Check
-        function checkTranslate() {
-            // 這只是一個簡單的跳轉，如果沒有安裝 App，瀏覽器可能會報錯或無反應
-            setTimeout(() => {
-                console.log("嘗試開啟 Google Translate App...");
-            }, 500);
-        }
-
-        // --- 渲染邏輯 ---
         function renderDateSelector() {
-            const container = document.getElementById('date-selector');
-            container.innerHTML = '';
+            const container = document.getElementById('date-selector'); container.innerHTML = '';
             Object.keys(scheduleData).forEach(dayKey => {
                 const dayInfo = scheduleData[dayKey];
                 const dayNum = dayKey.replace('day', '');
@@ -531,93 +429,81 @@
         }
 
         function renderTimeline(dayKey) {
-            const container = document.getElementById('timeline-container');
-            container.innerHTML = ''; 
-            const dayTitle = document.createElement('h3');
-            dayTitle.style.marginBottom = '20px'; dayTitle.style.marginLeft='10px';
+            const container = document.getElementById('timeline-container'); container.innerHTML = '';
+            const dayTitle = document.createElement('h3'); dayTitle.style.marginLeft='10px'; dayTitle.style.marginBottom='20px';
             dayTitle.innerHTML = `<span style="color:var(--accent-color); font-family:'Shippori Mincho',serif;">${scheduleData[dayKey].date}</span>`;
             container.appendChild(dayTitle);
 
             scheduleData[dayKey].events.forEach(event => {
-                const item = document.createElement('div');
-                item.className = 'timeline-item';
+                const item = document.createElement('div'); item.className = 'timeline-item';
                 let tagsHtml = event.tags.map(t => {
-                    let c = 'card-tag';
-                    if(t.includes('必')||t.includes('重點')) c+=' highlight';
-                    if(t.includes('路痴')||t.includes('Tips')) c+=' tips';
+                    let c = 'card-tag'; if(t.includes('必')||t.includes('路痴')||t.includes('重點')) c+=' highlight';
                     return `<span class="${c}">${t}</span>`;
                 }).join('');
+                
+                let priceHtml = event.price ? `<div class="card-price">${event.price}</div>` : '';
+
                 item.innerHTML = `<div class="card" onclick='openEventModal(${JSON.stringify(event)})'>
-                    <span class="card-time">${event.time}</span><h3 class="card-title">${event.title}</h3><div class="tags">${tagsHtml}</div></div>`;
+                    <span class="card-time">${event.time}</span>
+                    <h3 class="card-title">${event.title}</h3>
+                    <div class="tags">${tagsHtml}</div>
+                    ${priceHtml}
+                </div>`;
                 container.appendChild(item);
             });
         }
 
         function renderLists() {
-            const sContainer = document.getElementById('shopping-list-container');
-            shoppingList.forEach((item, idx) => sContainer.innerHTML += createCheckItem(item, 'shop'+idx));
-            const pContainer = document.getElementById('packing-list-container');
-            packingList.forEach((item, idx) => pContainer.innerHTML += createCheckItem(item, 'pack'+idx));
+            const sC = document.getElementById('shopping-list-container');
+            shoppingList.forEach((item,i) => sC.innerHTML += `<div class="checklist-item" onclick="toggleCheck(this)"><input type="checkbox" id="s${i}"><label for="s${i}"><span>${item}</span></label></div>`);
+            const pC = document.getElementById('packing-list-container');
+            packingList.forEach((item,i) => pC.innerHTML += `<div class="checklist-item" onclick="toggleCheck(this)"><input type="checkbox" id="p${i}"><label for="p${i}"><span>${item}</span></label></div>`);
         }
+        function toggleCheck(el) { const i = el.querySelector('input'); i.checked = !i.checked; el.classList.toggle('checked', i.checked); }
 
-        function createCheckItem(text, id) {
-            return `<div class="checklist-item" onclick="toggleCheck(this)">
-                <input type="checkbox" id="${id}"><label for="${id}" style="pointer-events:none;width:100%;"><span>${text}</span></label></div>`;
-        }
-        function toggleCheck(el) {
-            const input = el.querySelector('input'); input.checked = !input.checked;
-            el.classList.toggle('checked', input.checked);
-        }
-
-        // 匯率
         function calcRate(type) {
-            const rate = 0.052; 
-            const jpyEl = document.getElementById('jpy-input');
-            const hkdEl = document.getElementById('hkd-input');
-            if(type === 'jpy') hkdEl.value = (jpyEl.value * rate).toFixed(1);
-            else jpyEl.value = (hkdEl.value / rate).toFixed(0);
+            const jpy = document.getElementById('jpy-input'); const hkd = document.getElementById('hkd-input');
+            if(type==='jpy') hkd.value = (jpy.value * 0.052).toFixed(1); else jpy.value = (hkd.value / 0.052).toFixed(0);
         }
 
-        // 安全
         function sendSafetyMessage() {
-            if (navigator.geolocation) {
+             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(pos) {
                     const link = `https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`;
-                    const msg = `Hello! 我在京都玩得很開心，現在位置在這裡：${link}`;
-                    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-                }, () => window.open(`https://wa.me/?text=${encodeURIComponent("Hello! 我在京都玩得很開心！")}`, '_blank'));
-            } else alert("瀏覽器不支援定位");
+                    window.open(`https://wa.me/?text=${encodeURIComponent("Hello! 我在京都一切安好，目前位置：" + link)}`, '_blank');
+                });
+            } else alert("無法獲取定位");
         }
 
-        // 彈窗與路痴 TIPS
         function openEventModal(event) {
             document.getElementById('modal-title').innerText = event.title;
             document.getElementById('modal-type').innerText = event.type;
             document.getElementById('modal-time').innerText = event.time;
             document.getElementById('modal-address').innerText = event.address;
             document.getElementById('modal-note').innerHTML = event.note;
-            const linkContainer = document.getElementById('modal-links'); linkContainer.innerHTML = '';
-            if(event.link) linkContainer.innerHTML = `<a href="${event.link}" target="_blank" class="link-btn"><i class="fa-solid fa-link"></i> ${event.linkText || '查看詳情'}</a>`;
-            const mapQuery = encodeURIComponent(event.address + " " + event.title);
-            document.getElementById('modal-map-btn').onclick = () => window.open(`https://www.google.com/maps/search/?api=1&query=${mapQuery}`, '_blank');
+            
+            const priceRow = document.getElementById('modal-price-row');
+            if (event.price) {
+                priceRow.style.display = 'flex';
+                document.getElementById('modal-price').innerText = "預算/門票：" + event.price;
+            } else {
+                priceRow.style.display = 'none';
+            }
+
+            const lc = document.getElementById('modal-links'); lc.innerHTML = '';
+            if(event.link) lc.innerHTML = `<a href="${event.link}" target="_blank" class="link-btn"><i class="fa-solid fa-link"></i> 預約/詳情</a>`;
+            
+            const q = encodeURIComponent(event.address + " " + event.title);
+            document.getElementById('modal-map-btn').onclick = () => window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank');
             document.getElementById('detail-modal').classList.add('open');
         }
         function closeModal() { document.getElementById('detail-modal').classList.remove('open'); }
-        document.getElementById('detail-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+        document.getElementById('detail-modal').addEventListener('click', function(e){if(e.target===this)closeModal()});
+        function openTipsModal() { openEventModal({title:"路痴救星",type:"TIPS",time:"隨時",address:"京都全區",note:"1.京都塔在北邊 (車站正面)<br>2.公車後門上車，前門付款<br>3.善用Google Live View AR導航<br>4.迷路就搭計程車 (門自動開)", tags:[]}); }
 
-        function openTipsModal() {
-            const tips = `<p><strong>🧭 辨識方向：</strong>京都塔永遠在北邊。</p><p><strong>🚌 公車：</strong>後門上車，前門下車付款。</p><p><strong>🚶 AR 導航：</strong>善用 Google Maps Live View。</p><p><strong>🚕 計程車：</strong>迷路就搭！門自動開。</p>`;
-            openEventModal({ title: "路痴救星 TIPS", type: "生存指南", time: "隨時", address: "整個京都", note: tips, tags: [] });
-        }
-
-        // 地圖
         var map = L.map('map-container').setView([35.0034, 135.7681], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-        L.marker([34.9858, 135.7588]).addTo(map).bindPopup("京都車站");
-        L.marker([35.0037, 135.7786]).addTo(map).bindPopup("八坂神社");
-        L.marker([34.9346, 135.7593]).addTo(map).bindPopup("伏見酒造區");
-        L.marker([35.0116, 135.6766]).addTo(map).bindPopup("嵐山");
-
+        
         init();
     </script>
 </body>
