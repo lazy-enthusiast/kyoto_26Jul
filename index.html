@@ -337,74 +337,89 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // --- DATA ---
-        // 加入座標 (coords) 以支援地圖按日顯示
+        // --- DATA (Revised & Completed) ---
         const scheduleData = {
             "day1": {
                 date: "7/15 (三)", loc: "京都車站", weather: {icon: "fa-cloud-sun", temp: "32°C", desc: "悶熱，適時補水"},
                 events: [
-                    { time: "14:00", title: "抵達 Check-in", type: "交通", address: "京都車站八條口", coords: [34.9844, 135.7588], note: "利木津巴士下車處，找白色京都塔。", bookingUrl: "https://www.klook.com/" },
-                    { time: "16:00", title: "月桂冠大倉紀念館", type: "景點", address: "伏見區南浜町", coords: [34.9298, 135.7607], note: "喝中庭井水，買生酒。", bookingUrl: "https://www.gekkeikan.com/" },
-                    { time: "19:00", title: "晚餐：Jojo Izakaya", type: "美食", address: "四條烏丸", coords: [35.0035, 135.7594], note: "烤洋蔥、野菜。", tabelogUrl: "https://tabelog.com/" }
+                    { time: "14:00 - 16:00", title: "抵達 Check-in", type: "交通", address: "京都車站八條口", coords: [34.9844, 135.7588], note: "利木津巴士下車處，找白色京都塔。八條口位於車站背面。", bookingUrl: "https://www.klook.com/activity/1541-kix-airport-limousine-bus-transfer-kyoto/" },
+                    { time: "16:00 - 18:00", title: "月桂冠大倉紀念館", type: "景點", address: "伏見區南浜町247", coords: [34.9298, 135.7607], note: "喝中庭井水，買生酒(回飯店喝)。近鐵桃山御陵前站走10分。", bookingUrl: "https://www.gekkeikan.com/museum/" },
+                    { time: "午餐/下午", title: "月之藏人 (Tsuki no Kurabito)", type: "美食", address: "伏見區", coords: [34.9312, 135.7615], note: "若提早到可來此。舊酒造改建。必點：自家製豆腐、酒粕烤雞。", tabelogUrl: "https://tabelog.com/en/" },
+                    { time: "18:00 - 19:00", title: "超市採買 (AEON Kohyo)", type: "購物", address: "京都站八條口 Sakura館", coords: [34.9835, 135.7580], note: "買宵夜：枝豆、水茄子漬物、刺身。" },
+                    { time: "19:00 - 21:00", title: "晚餐：Jojo Izakaya", type: "美食", address: "四條烏丸", coords: [35.0035, 135.7594], note: "五十棲系列。烤洋蔥整顆、野菜炭火燒。若滿位改去 Isoya。", tabelogUrl: "https://tabelog.com/en/" }
                 ],
-                shopTip: "今日重點：京都車站超市 (AEON) 買宵夜、月桂冠買清酒。"
+                shopTip: "今日重點：京都車站超市買宵夜、月桂冠買限定清酒。"
             },
             "day2": {
                 date: "7/16 (四)", loc: "伏見 & 市區", weather: {icon: "fa-fire", temp: "33°C", desc: "宵山夜熱鬧，注意防曬"},
                 events: [
-                    { time: "10:00", title: "黃櫻 Kappa Country", type: "景點", address: "伏見區", coords: [34.9312, 135.7615], note: "河童主題，試飲啤酒。" },
-                    { time: "13:30", title: "伏見酒蔵小路", type: "品酒", address: "伏見區納屋町", coords: [34.9330, 135.7600], note: "十八藏試飲Set。" },
-                    { time: "16:00", title: "MY ONLY FRAGRANCE", type: "體驗", address: "京都市役所前", coords: [35.0116, 135.7681], note: "自調香水。" },
-                    { time: "20:00", title: "祇園祭 前祭宵山", type: "祭典", address: "四條烏丸", coords: [35.0040, 135.7600], note: "步行者天國，買粽子。" }
+                    { time: "08:30", title: "早餐：Ogawa Coffee", type: "美食", address: "京都站前 (法華俱樂部地下)", coords: [34.9865, 135.7590], note: "必點：京都早餐套餐 (厚片吐司+特調拿鐵)。" },
+                    { time: "10:00 - 12:00", title: "黃櫻 Kappa Country", type: "景點", address: "伏見區塩屋町228", coords: [34.9312, 135.7615], note: "河童主題，中庭試飲 Lucky Cat/Dog 啤酒或柚子酒。" },
+                    { time: "12:00 - 13:30", title: "午餐：鳥せい 本店", type: "美食", address: "伏見區上油掛町186", coords: [34.9305, 135.7610], note: "認大酒桶。必點：雞肉串燒 + 鐵桶生原酒。強烈建議預約。", tabelogUrl: "https://tabelog.com/en/" },
+                    { time: "13:30 - 15:30", title: "伏見酒蔵小路", type: "品酒", address: "伏見區納屋町", coords: [34.9330, 135.7600], note: "十八藏試飲Set，拍照美。可 TableCheck 預約。", bookingUrl: "https://www.tablecheck.com/en/shops/fushimi-sakagura-kouji/reserve" },
+                    { time: "16:00 - 17:00", title: "MY ONLY FRAGRANCE", type: "體驗", address: "京都市役所前", coords: [35.0116, 135.7681], note: "自調香水，標籤印旅程日期。", bookingUrl: "https://www.kkday.com/en-sg/product/248954" },
+                    { time: "18:00 - 20:00", title: "晚餐：Rokkaku Ace", type: "美食", address: "中京區", coords: [35.0070, 135.7600], note: "半熟蛋馬鈴薯沙拉 + 和牛塔塔。", tabelogUrl: "https://tabelog.com/" },
+                    { time: "20:00", title: "祇園祭 前祭宵山", type: "祭典", address: "四條烏丸一帶", coords: [35.0040, 135.7600], note: "步行者天國，買「長刀鉾粽」做護身符。" }
                 ],
                 shopTip: "今日重點：伏見清酒、MY ONLY FRAGRANCE 香水、宵山護身符。"
             },
             "day3": {
                 date: "7/17 (五)", loc: "御池通", weather: {icon: "fa-cloud-showers-heavy", temp: "31°C", desc: "午後可能有雷陣雨"},
                 events: [
-                    { time: "09:00", title: "山鉾巡行", type: "祭典", address: "御池通", coords: [35.0110, 135.7650], note: "找樹蔭觀看。" },
-                    { time: "13:30", title: "佐佐木酒造", type: "景點", address: "二條城北", coords: [35.0195, 135.7490], note: "洛中唯一酒造。" },
-                    { time: "17:00", title: "Lopia 超市", type: "購物", address: "京都站 Yodobashi", coords: [34.9870, 135.7590], note: "買肉類熟食。" }
+                    { time: "09:00 - 12:00", title: "山鉾巡行 (前祭)", type: "祭典", address: "御池通 / 河原町通", coords: [35.0110, 135.7650], note: "避開主路口，找御池通樹蔭下觀看。" },
+                    { time: "12:30", title: "午餐：Monsen (門扇)", type: "美食", address: "中京區", coords: [35.0060, 135.7680], note: "雞白湯拉麵名店。必點雞骨拉麵。", tabelogUrl: "https://tabelog.com/" },
+                    { time: "13:30 - 16:30", title: "佐佐木酒造", type: "景點", address: "二條城北", coords: [35.0195, 135.7490], note: "洛中唯一酒造 (佐佐木藏之介老家)。建議預約。", bookingUrl: "https://wabunka-lux.jp/experiences/en_sasaki-shuzo/" },
+                    { time: "17:00 - 18:00", title: "Lopia 超市 (Yodobashi)", type: "購物", address: "京都站 Yodobashi", coords: [34.9870, 135.7590], note: "買肉類、自家製香腸、壽司做宵夜。" }
                 ],
                 shopTip: "今日重點：佐佐木酒造限定酒、Lopia 超市大採購。"
             },
             "day4": {
                 date: "7/18 (六)", loc: "嵐山", weather: {icon: "fa-leaf", temp: "30°C", desc: "山區多雲，稍涼爽"},
                 events: [
-                    { time: "08:00", title: "伏見稻荷大社", type: "景點", address: "伏見稻荷", coords: [34.9671, 135.7727], note: "千本鳥居。" },
-                    { time: "14:00", title: "香道：天香堂", type: "體驗", address: "嵐山", coords: [35.0170, 135.6700], note: "製作匂袋。" }
+                    { time: "08:00", title: "伏見稻荷大社", type: "景點", address: "伏見稻荷", coords: [34.9671, 135.7727], note: "早起避人潮，走千本鳥居到奧社求人緣。早餐可吃附近的 Vermillion Espresso。" },
+                    { time: "11:30 - 14:00", title: "藤岡酒造 (蒼空)", type: "品酒", address: "伏見區", coords: [34.9300, 135.7620], note: "玻璃屋酒吧「En」。看釀酒桶喝蒼空純米大吟釀。", tabelogUrl: "https://tabelog.com/" },
+                    { time: "12:30", title: "午餐：Nagomi Ikeyan", type: "美食", address: "嵐山", coords: [35.0150, 135.6770], note: "搭JR嵯峨野線至嵯峨嵐山站。", tabelogUrl: "https://tabelog.com/" },
+                    { time: "14:00 - 16:00", title: "香道：天香堂", type: "體驗", address: "嵐山", coords: [35.0170, 135.6700], note: "製作匂袋，日式庭園氛圍。", bookingUrl: "https://tenkhodou.com/" },
+                    { time: "16:00", title: "野宮神社", type: "景點", address: "嵐山竹林入口", coords: [35.0178, 135.6743], note: "摸黑色龜石許願 (一年內實現良緣)。" },
+                    { time: "17:00", title: "業務超市 (Gyomu)", type: "購物", address: "市區分店", coords: [35.0000, 135.7500], note: "必買：柚子胡椒醬 (便宜好用)。" }
                 ],
-                shopTip: "今日重點：嵐山香氛小物、狐狸面具。"
+                shopTip: "今日重點：嵐山香氛小物、狐狸面具、業務超市柚子胡椒。"
             },
             "day5": {
                 date: "7/19 (日)", loc: "錦市場", weather: {icon: "fa-sun", temp: "34°C", desc: "盛夏酷暑"},
                 events: [
-                    { time: "10:00", title: "錦市場", type: "美食", address: "錦市場", coords: [35.0050, 135.7650], note: "吃豆乳甜甜圈、買漬物。" },
-                    { time: "14:00", title: "下鴨神社", type: "景點", address: "左京區", coords: [35.0390, 135.7730], note: "河合神社求美貌。" }
+                    { time: "09:00", title: "早餐：Sentido", type: "美食", address: "烏丸御池", coords: [35.0100, 135.7590], note: "必點：熱壓三明治。", tabelogUrl: "https://tabelog.com/" },
+                    { time: "10:00 - 13:00", title: "錦市場 & 錦天滿宮", type: "美食", address: "錦市場", coords: [35.0050, 135.7650], note: "吃豆乳甜甜圈、買漬物。去天滿宮摸銅牛求智慧。" },
+                    { time: "14:00 - 16:00", title: "下鴨神社 & 河合神社", type: "景點", address: "左京區", coords: [35.0390, 135.7730], note: "河合神社買鏡繪馬，用化妝品畫臉求美貌。" },
+                    { time: "18:00 - 20:00", title: "晚餐：Giro Giro Hitoshina", type: "美食", address: "下京區", coords: [34.9980, 135.7680], note: "現代懷石料理，適合獨旅。需預約。", bookingUrl: "https://tabelog.com/" }
                 ],
                 shopTip: "今日重點：錦市場漬物、七味粉、河合神社美人水。"
             },
             "day6": {
                 date: "7/20 (一)", loc: "市中心", weather: {icon: "fa-cloud", temp: "33°C", desc: "多雲"},
                 events: [
-                     { time: "14:00", title: "伊勢丹 Isetan", type: "購物", address: "京都站", coords: [34.9850, 135.7580], note: "買 Shiro 香水、551肉包。" },
-                     { time: "20:00", title: "後祭山鉾搭建", type: "祭典", address: "烏丸御池", coords: [35.0100, 135.7600], note: "看職人技藝。" }
+                     { time: "10:00", title: "京都文化博物館", type: "景點", address: "三條高倉", coords: [35.0085, 135.7620], note: "舊銀行建築，欣賞工藝品。" },
+                     { time: "14:00", title: "伊勢丹 Isetan", type: "購物", address: "京都站", coords: [34.9850, 135.7580], note: "香水區 (Shiro / Aux Paradis)。地下街買551肉包、下鴨茶寮便當。" },
+                     { time: "20:00", title: "後祭山鉾搭建", type: "祭典", address: "烏丸御池", coords: [35.0100, 135.7600], note: "看職人無釘組裝大船鉾。" }
                 ],
                 shopTip: "今日重點：伊勢丹百貨 (Shiro, Aux Paradis)、551肉包。"
             },
             "day7": {
                 date: "7/21 (二)", loc: "東寺", weather: {icon: "fa-sun", temp: "35°C", desc: "高溫警報，市集炎熱"},
                 events: [
-                    { time: "08:00", title: "東寺弘法市", type: "市集", address: "東寺", coords: [34.9810, 135.7480], note: "每月21日古董市集。" },
-                    { time: "18:00", title: "後祭宵山", type: "祭典", address: "市中心", coords: [35.0080, 135.7620], note: "寧靜版宵山。" }
+                    { time: "08:00 - 11:00", title: "東寺弘法市", type: "市集", address: "東寺", coords: [34.9810, 135.7480], note: "每月21日古董市集。千攤古董，早去寶物多。買古董猪口杯。" },
+                    { time: "12:00", title: "午餐：市集攤販", type: "美食", address: "東寺", coords: [34.9810, 135.7480], note: "隨興吃炒麵、廣島燒。" },
+                    { time: "15:00", title: "Fresco 超市", type: "購物", address: "二條城附近", coords: [35.0140, 135.7480], note: "補充日常補給品。" },
+                    { time: "18:00 - 23:00", title: "後祭宵山", type: "祭典", address: "烏丸御池", coords: [35.0080, 135.7620], note: "寧靜版宵山。看屏風祭，路邊喝冰鎮清酒。" }
                 ],
                 shopTip: "今日重點：東寺古董、舊和服、古董酒杯。"
             },
             "day8": {
                 date: "7/22 (三)", loc: "返程", weather: {icon: "fa-plane", temp: "32°C", desc: "天氣穩定"},
                 events: [
-                    { time: "11:00", title: "阿闍梨餅", type: "購物", address: "京都站", coords: [34.9858, 135.7588], note: "最後伴手禮。" },
-                    { time: "13:00", title: "前往機場", type: "交通", address: "八條口", coords: [34.9840, 135.7590], note: "利木津巴士。" }
+                    { time: "09:00", title: "早餐：Inoda Coffee 本店", type: "美食", address: "中京區", coords: [35.0090, 135.7630], note: "京之朝食 (火腿+炒蛋+咖啡)。", tabelogUrl: "https://tabelog.com/" },
+                    { time: "11:00", title: "阿闍梨餅 (最後採買)", type: "購物", address: "京都站", coords: [34.9858, 135.7588], note: "新幹線內/外有賣。Q彈紅豆餅。" },
+                    { time: "13:00", title: "前往機場", type: "交通", address: "八條口", coords: [34.9840, 135.7590], note: "搭乘利木津巴士前往 KIX。", bookingUrl: "https://www.klook.com/activity/1541-kix-airport-limousine-bus-transfer-kyoto/" }
                 ],
                 shopTip: "今日重點：阿闍梨餅、機場免稅店。"
             }
