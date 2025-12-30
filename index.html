@@ -45,15 +45,28 @@
         .header-btn { color: var(--text-on-dark); font-size: 1.2rem; cursor: pointer; text-decoration: none; position: relative;}
         .fan-btn i { color: var(--accent-color); }
 
-        /* --- Global Date Selector --- */
+        /* --- Global Date Selector (UI Optimized) --- */
         .date-selector-container {
             background: var(--bg-color); z-index: 90;
-            padding: 10px 20px 10px 20px;
+            padding: 10px 0;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            width: 100%;
         }
         .date-selector { 
-            display: flex; overflow-x: auto; gap: 10px; padding-bottom: 5px; scrollbar-width: none; 
+            display: flex; 
+            overflow-x: auto; 
+            gap: 10px; 
+            padding: 0 20px 5px 20px; 
+            scrollbar-width: none; 
             -webkit-overflow-scrolling: touch;
+            /* 手機版預設靠左，確保可滑動 */
+            justify-content: flex-start;
+        }
+        /* 電腦/平板版：置中顯示 */
+        @media (min-width: 768px) {
+            .date-selector {
+                justify-content: center;
+            }
         }
         .date-selector::-webkit-scrollbar { display: none; }
         
@@ -62,6 +75,7 @@
             white-space: nowrap; font-size: 0.85rem; cursor: pointer; color: #aaa;
             display: flex; flex-direction: column; align-items: center; min-width: 55px;
             transition: all 0.2s; border: 1px solid transparent;
+            flex-shrink: 0; /* 防止被擠壓 */
         }
         .date-chip.active {
             background: var(--accent-color); color: #fff;
@@ -228,6 +242,16 @@
             text-align: center; border-radius: 8px;
         }
 
+        /* Talk Card Styles */
+        .talk-card {
+            background: #fff; color: #333;
+            border-radius: 12px; padding: 20px; margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .talk-jp { font-size: 1.4rem; font-weight: bold; margin-bottom: 8px; color: var(--text-on-light); }
+        .talk-zh { font-size: 0.9rem; color: #666; }
+
     </style>
 </head>
 <body>
@@ -309,14 +333,14 @@
                 <div class="tool-btn" onclick="openSubPage('packing')">
                     <i class="fa-solid fa-suitcase"></i><span>行李清單</span>
                 </div>
-                <div class="tool-btn" onclick="switchMainPage('shopping')">
-                    <i class="fa-solid fa-basket-shopping"></i><span>查看購物</span>
-                </div>
                 <div class="tool-btn" onclick="openSubPage('rate')">
                     <i class="fa-solid fa-yen-sign"></i><span>匯率換算</span>
                 </div>
                 <div class="tool-btn" onclick="openSubPage('safety')">
                     <i class="fa-solid fa-user-shield"></i><span>安全報平安</span>
+                </div>
+                <div class="tool-btn" onclick="openSubPage('talk')">
+                    <i class="fa-solid fa-comment-dots"></i><span>手指對話</span>
                 </div>
                 <div class="tool-btn" onclick="openTipsModal()">
                     <i class="fa-regular fa-compass"></i><span>路痴救星</span>
@@ -337,7 +361,7 @@
                     <i class="fa-solid fa-location-dot" style="color:var(--accent-color)"></i> <b>地址：</b><br>
                     京都市下京區東塩小路町558-8<br>
                     <span style="font-size:0.8rem; color:#666;">(Shimogyo-ku, Higashishiokoji-cho 558-8)</span><br>
-                    <a href="https://www.google.com/maps/search/?api=1&query=$34.9868,135.7599" target="_blank" class="link-btn" style="margin-top:8px;">開啟地圖</a>
+                    <a href="https://www.google.com/maps/search/?api=1&query=Dormy+Inn+Premium+Kyoto+Ekimae" target="_blank" class="link-btn" style="margin-top:8px;">開啟地圖</a>
                 </div>
 
                 <div class="checklist-item" style="opacity:1;">
@@ -388,6 +412,36 @@
             </div>
         </div>
 
+        <div id="subpage-talk" class="sub-page">
+            <div class="sub-header"><button class="back-btn" onclick="closeSubPage('talk')"><i class="fa-solid fa-arrow-left"></i></button><h2>手指指對話</h2></div>
+            <div class="sub-content">
+                <div class="talk-card">
+                    <div class="talk-jp">一人です。</div>
+                    <div class="talk-zh">我是一位。</div>
+                </div>
+                <div class="talk-card">
+                    <div class="talk-jp">おすすめは何ですか？</div>
+                    <div class="talk-zh">有推薦的菜色嗎？</div>
+                </div>
+                <div class="talk-card">
+                    <div class="talk-jp">お会計をお願いします。</div>
+                    <div class="talk-zh">麻煩結帳。</div>
+                </div>
+                <div class="talk-card">
+                    <div class="talk-jp">クレジットカードは<br>使えますか？</div>
+                    <div class="talk-zh">可以用信用卡嗎？</div>
+                </div>
+                <div class="talk-card">
+                    <div class="talk-jp">ここへ行ってください。</div>
+                    <div class="talk-zh">(給司機) 請去這裡。</div>
+                </div>
+                <div class="talk-card">
+                    <div class="talk-jp">わさび抜きでお願いします。</div>
+                    <div class="talk-zh">請不要加芥末。</div>
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <nav class="bottom-nav">
@@ -413,6 +467,12 @@
                 <div class="info-row"><i class="fa-solid fa-location-dot"></i><span id="modal-address">地址</span></div>
                 <div class="info-row" id="modal-price-row"><i class="fa-solid fa-money-bill-wave"></i><span id="modal-price"></span></div>
                 
+                <div class="info-row" style="background:rgba(233,84,100,0.1); padding:8px; border-radius:6px; align-items:center;">
+                    <i class="fa-solid fa-calculator"></i>
+                    <span style="white-space:nowrap;">實際花費(¥)：</span>
+                    <input type="number" id="modal-actual-cost" placeholder="0" style="background:transparent; border:none; border-bottom:1px solid #555; width:80px; color:#333; font-size:1rem; text-align:center;" onchange="saveExpense()">
+                </div>
+
                 <div class="note-box">
                     <div style="font-weight:bold; margin-bottom:8px; color:var(--accent-color);">攻略與 TIPS：</div>
                     <span id="modal-note">內容...</span>
@@ -429,7 +489,6 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // --- DATA: 已根據您提供的新行程表完整更新，並保留原有的 shopping_items 及 note 細節 ---
         const scheduleData = {
             "day1": {
                 "date": "7/15 (三)",
@@ -518,14 +577,127 @@
         let map = null;
         let markers = [];
         let waterCount = 0;
+        let currentModalEventTitle = ""; // For saving expense data
+        const STORAGE_KEY = 'kyoto_2026_data_v2';
 
         // --- Logic ---
         function init() { 
             renderDateSelector(); 
-            selectDay('day1', document.querySelector('.date-chip')); // Default Init
+            
+            // Render basic lists first
             renderPackingList();
             renderGeneralShoppingList();
+            
             initMap();
+            loadState(); // Load saved data
+            
+            // Auto Select Date Logic
+            checkDateAndInit();
+        }
+
+        // --- Auto Date Logic ---
+        function checkDateAndInit() {
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = today.getMonth() + 1; // Jan is 0
+            const day = today.getDate();
+            
+            // Map dates to day keys (assuming 2026)
+            // Logic: If month is 7 (July) and day is between 15-22, select that day
+            // If testing in a different year, this logic will just default to Day 1 unless we remove year check
+            let targetDay = "day1"; // Default
+            
+            if (month === 7) {
+                if (day >= 15 && day <= 22) {
+                    const diff = day - 15;
+                    targetDay = `day${diff + 1}`;
+                }
+            }
+            
+            // Find the chip and select it
+            const chips = document.querySelectorAll('.date-chip');
+            let found = false;
+            chips.forEach(chip => {
+                if(chip.innerText.includes(`D${targetDay.replace('day','')}`)) {
+                    selectDay(targetDay, chip);
+                    found = true;
+                    // Auto scroll to active chip on mobile
+                    chip.scrollIntoView({behavior: "smooth", inline: "center", block: "nearest"});
+                }
+            });
+            
+            if(!found) selectDay('day1', chips[0]);
+        }
+
+        // --- Data Persistence ---
+        function saveState() {
+            const state = {
+                checks: {},
+                water: waterCount,
+                expenses: {}
+            };
+            
+            // Checkboxes
+            document.querySelectorAll('input[type="checkbox"]').forEach(input => {
+                if(input.id) state.checks[input.id] = input.checked;
+            });
+            
+            // Expenses (Retrieved from LocalStorage merged with current input if open)
+            const savedRaw = localStorage.getItem(STORAGE_KEY);
+            let savedExpenses = {};
+            if(savedRaw) {
+                try { savedExpenses = JSON.parse(savedRaw).expenses || {}; } catch(e){}
+            }
+            state.expenses = savedExpenses;
+            
+            // If modal is open, update current expense
+            const costInput = document.getElementById('modal-actual-cost');
+            if(costInput && currentModalEventTitle) {
+                state.expenses[currentModalEventTitle] = costInput.value;
+            }
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return;
+            
+            try {
+                const state = JSON.parse(saved);
+                
+                if (typeof state.water === 'number') {
+                    waterCount = state.water;
+                    const wc = document.getElementById('water-count');
+                    if(wc) wc.innerText = waterCount;
+                }
+
+                setTimeout(() => {
+                    // Restore Checkboxes
+                    Object.keys(state.checks).forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) {
+                            el.checked = state.checks[id];
+                            if(el.parentElement.classList.contains('checklist-item')) {
+                                el.parentElement.classList.toggle('checked', el.checked);
+                            }
+                        }
+                    });
+                }, 100);
+            } catch (e) { console.error("Load failed", e); }
+        }
+        
+        function saveExpense() {
+            saveState();
+        }
+
+        function getSavedExpense(title) {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return "";
+            try {
+                const state = JSON.parse(saved);
+                return state.expenses && state.expenses[title] ? state.expenses[title] : "";
+            } catch(e) { return ""; }
         }
 
         function switchMainPage(pageId, navEl) {
@@ -560,7 +732,7 @@
                 const dayInfo = scheduleData[dayKey];
                 const dayNum = dayKey.replace('day', '');
                 const chip = document.createElement('div');
-                chip.className = `date-chip ${dayKey === 'day1' ? 'active' : ''}`;
+                chip.className = `date-chip`;
                 chip.onclick = () => selectDay(dayKey, chip);
                 chip.innerHTML = `<span class="day-num">D${dayNum}</span><span class="day-week">${dayInfo.date.split(' ')[0]}</span>`;
                 container.appendChild(chip);
@@ -570,12 +742,15 @@
         function selectDay(dayKey, chipEl) {
             currentDay = dayKey;
             document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('active'));
-            chipEl.classList.add('active');
+            if(chipEl) chipEl.classList.add('active');
             
             renderTimeline(dayKey);
             renderWeather(dayKey);
             renderDailyShopping(dayKey);
             if(map) updateMapMarkers(dayKey);
+            
+            // Re-apply checkbox states for new generated content
+            loadState(); 
         }
 
         function renderTimeline(dayKey) {
@@ -595,7 +770,7 @@
                 
                 let priceHtml = event.price ? `<div class="card-price">${event.price}</div>` : '';
 
-                item.innerHTML = `<div class="card" onclick='openEventModal(${JSON.stringify(event)})'>
+                item.innerHTML = `<div class="card" onclick='openEventModal(${JSON.stringify(event).replace(/'/g, "&#39;")})'>
                     <span class="card-time">${event.time}</span>
                     <h3 class="card-title">${event.title}</h3>
                     <div class="tags">${tagsHtml}</div>
@@ -640,6 +815,7 @@
         function addWater() {
             waterCount++;
             document.getElementById('water-count').innerText = waterCount;
+            saveState();
         }
 
         function renderDailyShopping(dayKey) {
@@ -657,7 +833,7 @@
                     
                     let itemsHtml = '';
                     event.shopping_items.forEach((item, i) => {
-                        const id = `shop-${dayKey}-${event.title}-${i}`;
+                        const id = `shop-${dayKey}-${event.title}-${i}`.replace(/\s+/g, '');
                         itemsHtml += `<div class="checklist-item" onclick="toggleCheck(this)">
                             <input type="checkbox" id="${id}">
                             <label for="${id}"><span>${item}</span></label>
@@ -689,7 +865,15 @@
             pC.innerHTML = '';
             packingList.forEach((item,i) => pC.innerHTML += `<div class="checklist-item" onclick="toggleCheck(this)"><input type="checkbox" id="p${i}"><label for="p${i}"><span>${item}</span></label></div>`);
         }
-        function toggleCheck(el) { const i = el.querySelector('input'); i.checked = !i.checked; el.classList.toggle('checked', i.checked); }
+        
+        function toggleCheck(el) { 
+            const i = el.querySelector('input'); 
+            if(event.target !== i) {
+                i.checked = !i.checked; 
+            }
+            el.classList.toggle('checked', i.checked); 
+            saveState();
+        }
 
         function calcRate(type) {
             const rate = parseFloat(document.getElementById('rate-setting').value) || 0.052;
@@ -708,6 +892,7 @@
         function sendSafetyMessage() {
              if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(pos) {
+                    // Fix: Use Universal Google Maps Link
                     const link = `https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`;
                     window.open(`https://wa.me/?text=${encodeURIComponent("Hello! 我在京都一切安好，目前位置：" + link)}`, '_blank');
                 });
@@ -715,11 +900,16 @@
         }
 
         function openEventModal(event) {
+            currentModalEventTitle = event.title; // Set current event for expense saving
+            
             document.getElementById('modal-title').innerText = event.title;
             document.getElementById('modal-type').innerText = event.type;
             document.getElementById('modal-time').innerText = event.time;
             document.getElementById('modal-address').innerText = event.address;
             document.getElementById('modal-note').innerHTML = event.note;
+            
+            // Restore actual cost
+            document.getElementById('modal-actual-cost').value = getSavedExpense(event.title);
             
             document.getElementById('taxi-address').innerText = event.address;
             document.getElementById('taxi-name').innerText = event.title;
@@ -736,6 +926,7 @@
             const lc = document.getElementById('modal-links'); lc.innerHTML = '';
             if(event.link) lc.innerHTML = `<a href="${event.link}" target="_blank" class="link-btn"><i class="fa-solid fa-link"></i> 預約/詳情</a>`;
             
+            // Fix: Universal Google Maps Link
             let mapUrl = "";
             if(event.coords) {
                 mapUrl = `https://www.google.com/maps/search/?api=1&query=${event.coords[0]},${event.coords[1]}`;
@@ -752,7 +943,10 @@
             card.style.display = card.style.display === 'none' ? 'block' : 'none';
         }
 
-        function closeModal() { document.getElementById('detail-modal').classList.remove('open'); }
+        function closeModal() { 
+            document.getElementById('detail-modal').classList.remove('open'); 
+            currentModalEventTitle = ""; // Clear current event
+        }
         document.getElementById('detail-modal').addEventListener('click', function(e){if(e.target===this)closeModal()});
         function openTipsModal() { openEventModal({title:"路痴救星",type:"TIPS",time:"隨時",address:"京都全區",note:"1.京都塔在北邊 (車站正面)<br>2.公車後門上車，前門付款<br>3.善用Google Live View AR導航<br>4.迷路就搭計程車 (門自動開)", tags:[]}); }
 
