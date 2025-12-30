@@ -17,6 +17,7 @@
             --text-on-light: #2F2F2F;  /* 墨黑 */
             --menu-bg: #2b2a29;
             --weather-gradient: linear-gradient(135deg, #4b6cb7 0%, #182848 100%);
+            --weather-gradient-hot: linear-gradient(135deg, #FF512F 0%, #DD2476 100%); /* 夏天熱配色 */
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -45,7 +46,7 @@
         .header-btn { color: var(--text-on-dark); font-size: 1.2rem; cursor: pointer; text-decoration: none; position: relative;}
         .fan-btn i { color: var(--accent-color); }
 
-        /* --- Global Date Selector (UI Optimized) --- */
+        /* --- Date Selector --- */
         .date-selector-container {
             background: var(--bg-color); z-index: 90;
             padding: 10px 0;
@@ -59,15 +60,9 @@
             padding: 0 20px 5px 20px; 
             scrollbar-width: none; 
             -webkit-overflow-scrolling: touch;
-            /* 手機版預設靠左，確保可滑動 */
             justify-content: flex-start;
         }
-        /* 電腦/平板版：置中顯示 */
-        @media (min-width: 768px) {
-            .date-selector {
-                justify-content: center;
-            }
-        }
+        @media (min-width: 768px) { .date-selector { justify-content: center; } }
         .date-selector::-webkit-scrollbar { display: none; }
         
         .date-chip {
@@ -75,7 +70,7 @@
             white-space: nowrap; font-size: 0.85rem; cursor: pointer; color: #aaa;
             display: flex; flex-direction: column; align-items: center; min-width: 55px;
             transition: all 0.2s; border: 1px solid transparent;
-            flex-shrink: 0; /* 防止被擠壓 */
+            flex-shrink: 0; 
         }
         .date-chip.active {
             background: var(--accent-color); color: #fff;
@@ -94,11 +89,11 @@
         }
         .page.active { display: block; opacity: 1; z-index: 10; }
         
-        /* Map Page Specific */
+        /* Map Page */
         #page-map { padding: 0 0 80px 0; } 
         #map-container { width: 100%; height: 100%; }
 
-        /* 子頁面 */
+        /* Sub Pages */
         .sub-page {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: var(--bg-color); z-index: 2000;
@@ -113,10 +108,7 @@
         }
         .back-btn { font-size: 1.2rem; color: var(--accent-color); background: none; border: none; padding: 5px; cursor: pointer;}
         .sub-header h2 { margin: 0; font-size: 1.1rem; font-family: "Shippori Mincho", serif; }
-        .sub-content { 
-            flex: 1; overflow-y: auto; padding: 20px; 
-            -webkit-overflow-scrolling: touch;
-        }
+        .sub-content { flex: 1; overflow-y: auto; padding: 20px; -webkit-overflow-scrolling: touch; }
 
         /* --- Timeline & Cards --- */
         .timeline-container { padding: 0 20px; }
@@ -158,6 +150,14 @@
             border-radius: 16px; padding: 25px; margin: 20px;
             text-align: center; color: white;
             box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            position: relative; overflow: hidden;
+        }
+        .weather-card.hot { background: var(--weather-gradient-hot); } /* 溫度高時切換 */
+        
+        .weather-source-badge {
+            position: absolute; top: 10px; right: 10px;
+            font-size: 0.65rem; background: rgba(0,0,0,0.3);
+            padding: 3px 8px; border-radius: 10px; opacity: 0.8;
         }
         .weather-main { display: flex; justify-content: space-around; align-items: center; margin: 20px 0; }
         .weather-icon { font-size: 3.5rem; }
@@ -178,7 +178,7 @@
         }
         .tool-btn i { font-size: 2.2rem; color: var(--accent-color); margin-bottom: 12px; display: block; }
 
-        /* --- Lists --- */
+        /* --- Lists & Footer --- */
         .checklist-item {
             background: rgba(255,255,255,0.08); padding: 15px; margin-bottom: 12px;
             border-radius: 8px; display: flex; align-items: center; gap: 15px;
@@ -187,7 +187,6 @@
         .checklist-item.checked span { text-decoration: line-through; }
         .checklist-item input { width: 22px; height: 22px; accent-color: var(--accent-color); }
         
-        /* --- Footer --- */
         nav.bottom-nav {
             position: fixed; bottom: 0; width: 100%;
             background-color: var(--menu-bg);
@@ -235,14 +234,11 @@
             font-weight: bold; font-size: 1rem; border: none; cursor: pointer;
         }
         
-        /* Taxi Card */
         .taxi-card {
             background: #fff; color: #000; padding: 20px; 
             border: 4px solid #000; margin: 15px 0; 
             text-align: center; border-radius: 8px;
         }
-
-        /* Talk Card Styles */
         .talk-card {
             background: #fff; color: #333;
             border-radius: 12px; padding: 20px; margin-bottom: 15px;
@@ -288,7 +284,11 @@
         <div id="page-weather" class="page">
             <div style="padding: 20px;">
                 <h2 style="font-family:'Shippori Mincho',serif; text-align:center; margin-bottom:10px;">當日天氣預報</h2>
-                <div id="weather-content"></div>
+                <div id="weather-content">
+                    <div style="text-align:center; padding:20px;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> 正在連線 Open-Meteo 氣象衛星...
+                    </div>
+                </div>
                 
                 <div style="background:rgba(255,255,255,0.1); padding:15px; border-radius:12px; margin:20px 0; display:flex; align-items:center; justify-content:space-between; border:1px solid rgba(255,255,255,0.1);">
                     <div>
@@ -314,9 +314,7 @@
             <div style="padding: 20px;">
                 <h2 style="font-family:'Shippori Mincho',serif; text-align:center;">今日購物建議</h2>
                 <p style="text-align:center; opacity:0.7; font-size:0.85rem; margin-bottom:20px;">根據當日行程地點推薦</p>
-                
                 <div id="daily-shopping-list"></div>
-
                 <div style="margin-top:40px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
                     <h3 style="color:#aaa; font-size:1rem;">全行程購物清單 (General)</h3>
                     <div id="general-shopping-container"></div>
@@ -327,24 +325,12 @@
         <div id="page-tools" class="page">
             <h2 style="text-align:center; margin: 30px 0 20px 0; font-family:'Shippori Mincho',serif;">旅人百寶箱</h2>
             <div class="tools-grid">
-                <div class="tool-btn" onclick="openSubPage('hotel')">
-                    <i class="fa-solid fa-bed"></i><span>酒店資訊</span>
-                </div>
-                <div class="tool-btn" onclick="openSubPage('packing')">
-                    <i class="fa-solid fa-suitcase"></i><span>行李清單</span>
-                </div>
-                <div class="tool-btn" onclick="openSubPage('rate')">
-                    <i class="fa-solid fa-yen-sign"></i><span>匯率換算</span>
-                </div>
-                <div class="tool-btn" onclick="openSubPage('safety')">
-                    <i class="fa-solid fa-user-shield"></i><span>安全報平安</span>
-                </div>
-                <div class="tool-btn" onclick="openSubPage('talk')">
-                    <i class="fa-solid fa-comment-dots"></i><span>手指對話</span>
-                </div>
-                <div class="tool-btn" onclick="openTipsModal()">
-                    <i class="fa-regular fa-compass"></i><span>路痴救星</span>
-                </div>
+                <div class="tool-btn" onclick="openSubPage('hotel')"><i class="fa-solid fa-bed"></i><span>酒店資訊</span></div>
+                <div class="tool-btn" onclick="openSubPage('packing')"><i class="fa-solid fa-suitcase"></i><span>行李清單</span></div>
+                <div class="tool-btn" onclick="openSubPage('rate')"><i class="fa-solid fa-yen-sign"></i><span>匯率換算</span></div>
+                <div class="tool-btn" onclick="openSubPage('safety')"><i class="fa-solid fa-user-shield"></i><span>安全報平安</span></div>
+                <div class="tool-btn" onclick="openSubPage('talk')"><i class="fa-solid fa-comment-dots"></i><span>手指對話</span></div>
+                <div class="tool-btn" onclick="openTipsModal()"><i class="fa-regular fa-compass"></i><span>路痴救星</span></div>
             </div>
             <div style="text-align:center; margin-top:30px;">
                 <button onclick="history.back()" style="background:none; border:1px solid #777; color:#fff; padding:10px 20px; border-radius:20px;">關閉百寶箱</button>
@@ -356,26 +342,13 @@
             <div class="sub-content">
                 <h3 style="color:var(--accent-color); font-family:'Shippori Mincho',serif; margin-bottom:10px;">Dormy Inn Premium Kyoto Ekimae</h3>
                 <div style="font-size:0.9rem; opacity:0.8; margin-bottom:20px;">天然溫泉朵米 premium 京都站前</div>
-                
                 <div class="note-box">
-                    <i class="fa-solid fa-location-dot" style="color:var(--accent-color)"></i> <b>地址：</b><br>
-                    京都市下京區東塩小路町558-8<br>
-                    <span style="font-size:0.8rem; color:#666;">(Shimogyo-ku, Higashishiokoji-cho 558-8)</span><br>
-                    <a href="https://www.google.com/maps/search/?api=1&query=Dormy+Inn+Premium+Kyoto+Ekimae" target="_blank" class="link-btn" style="margin-top:8px;">開啟地圖</a>
+                    <i class="fa-solid fa-location-dot" style="color:var(--accent-color)"></i> <b>地址：</b><br>京都市下京區東塩小路町558-8<br>
+                    <a href="https://www.google.com/maps/search/?api=1&query=$34.9868,135.7599" target="_blank" class="link-btn" style="margin-top:8px;">開啟地圖</a>
                 </div>
-
-                <div class="checklist-item" style="opacity:1;">
-                    <i class="fa-regular fa-clock" style="color:var(--accent-color)"></i> 
-                    <span><b>Check-in:</b> 15:00 起 / <b>Out:</b> 11:00 前</span>
-                </div>
-
+                <div class="checklist-item" style="opacity:1;"><i class="fa-regular fa-clock" style="color:var(--accent-color)"></i><span><b>In:</b> 15:00 / <b>Out:</b> 11:00</span></div>
                 <h4 style="border-bottom:1px solid #555; padding-bottom:5px; margin-top:25px;">獨旅特色</h4>
-                <ul style="padding-left:20px; line-height:1.6; font-size:0.95rem;">
-                    <li><b>頂樓天然溫泉：</b>室內+半戶外浴池，女性專用時段安全。附免費冰淇淋+優格飲。</li>
-                    <li><b>夜鳴き蕎麥麵：</b>每晚 21:30-23:00 大廳免費提供醬油拉麵。</li>
-                    <li><b>設施：</b>免費自助洗衣機/烘乾機 (長住神器)。</li>
-                    <li><b>位置：</b>距離京都站中央出口步行3-5分鐘，認京都塔方向。</li>
-                </ul>
+                <ul style="padding-left:20px; line-height:1.6; font-size:0.95rem;"><li>頂樓天然溫泉</li><li>免費夜鳴き蕎麥麵 (21:30-23:00)</li><li>免費洗衣機</li></ul>
             </div>
         </div>
 
@@ -415,30 +388,12 @@
         <div id="subpage-talk" class="sub-page">
             <div class="sub-header"><button class="back-btn" onclick="closeSubPage('talk')"><i class="fa-solid fa-arrow-left"></i></button><h2>手指指對話</h2></div>
             <div class="sub-content">
-                <div class="talk-card">
-                    <div class="talk-jp">一人です。</div>
-                    <div class="talk-zh">我是一位。</div>
-                </div>
-                <div class="talk-card">
-                    <div class="talk-jp">おすすめは何ですか？</div>
-                    <div class="talk-zh">有推薦的菜色嗎？</div>
-                </div>
-                <div class="talk-card">
-                    <div class="talk-jp">お会計をお願いします。</div>
-                    <div class="talk-zh">麻煩結帳。</div>
-                </div>
-                <div class="talk-card">
-                    <div class="talk-jp">クレジットカードは<br>使えますか？</div>
-                    <div class="talk-zh">可以用信用卡嗎？</div>
-                </div>
-                <div class="talk-card">
-                    <div class="talk-jp">ここへ行ってください。</div>
-                    <div class="talk-zh">(給司機) 請去這裡。</div>
-                </div>
-                <div class="talk-card">
-                    <div class="talk-jp">わさび抜きでお願いします。</div>
-                    <div class="talk-zh">請不要加芥末。</div>
-                </div>
+                <div class="talk-card"><div class="talk-jp">一人です。</div><div class="talk-zh">我是一位。</div></div>
+                <div class="talk-card"><div class="talk-jp">おすすめは何ですか？</div><div class="talk-zh">有推薦的菜色嗎？</div></div>
+                <div class="talk-card"><div class="talk-jp">お会計をお願いします。</div><div class="talk-zh">麻煩結帳。</div></div>
+                <div class="talk-card"><div class="talk-jp">クレジットカードは<br>使えますか？</div><div class="talk-zh">可以用信用卡嗎？</div></div>
+                <div class="talk-card"><div class="talk-jp">ここへ行ってください。</div><div class="talk-zh">(給司機) 請去這裡。</div></div>
+                <div class="talk-card"><div class="talk-jp">わさび抜きでお願いします。</div><div class="talk-zh">請不要加芥末。</div></div>
             </div>
         </div>
 
@@ -456,29 +411,20 @@
             <span class="close-modal" onclick="closeModal()">×</span>
             <div class="modal-header"><h2 id="modal-title">標題</h2><span id="modal-type" class="sub">類型</span></div>
             <div class="modal-body">
-                
                 <div id="taxi-card" class="taxi-card" style="display:none;">
                     <p style="font-size:0.8rem; color:#666; margin:0 0 5px 0;">運転手さん、ここへお願いします</p>
                     <h2 id="taxi-address" style="font-size:1.5rem; margin:5px 0; font-weight:bold; line-height:1.2;"></h2>
                     <p id="taxi-name" style="font-size:1rem; margin-top:5px; color:#444;"></p>
                 </div>
-
                 <div class="info-row"><i class="fa-regular fa-clock"></i><span id="modal-time">時間</span></div>
                 <div class="info-row"><i class="fa-solid fa-location-dot"></i><span id="modal-address">地址</span></div>
                 <div class="info-row" id="modal-price-row"><i class="fa-solid fa-money-bill-wave"></i><span id="modal-price"></span></div>
-                
                 <div class="info-row" style="background:rgba(233,84,100,0.1); padding:8px; border-radius:6px; align-items:center;">
-                    <i class="fa-solid fa-calculator"></i>
-                    <span style="white-space:nowrap;">實際花費(¥)：</span>
+                    <i class="fa-solid fa-calculator"></i><span style="white-space:nowrap;">實際花費(¥)：</span>
                     <input type="number" id="modal-actual-cost" placeholder="0" style="background:transparent; border:none; border-bottom:1px solid #555; width:80px; color:#333; font-size:1rem; text-align:center;" onchange="saveExpense()">
                 </div>
-
-                <div class="note-box">
-                    <div style="font-weight:bold; margin-bottom:8px; color:var(--accent-color);">攻略與 TIPS：</div>
-                    <span id="modal-note">內容...</span>
-                </div>
+                <div class="note-box"><div style="font-weight:bold; margin-bottom:8px; color:var(--accent-color);">攻略與 TIPS：</div><span id="modal-note">內容...</span></div>
                 <div id="modal-links" style="margin-bottom: 20px;"></div>
-                
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:20px;">
                      <button class="action-btn" id="modal-map-btn" style="margin-top:0;"><i class="fa-solid fa-map-location-dot"></i> Google 導航</button>
                      <button class="action-btn" onclick="toggleTaxiCard()" style="margin-top:0; background:#444;"><i class="fa-solid fa-taxi"></i> 給司機看</button>
@@ -490,84 +436,60 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const scheduleData = {
-            "day1": {
-                "date": "7/15 (三)",
-                "events": [
-                    { time: "14:00 - 16:00", title: "抵達京都站 & Check-in", type: "交通/住宿", price: "¥2,600", address: "Dormy Inn Premium Kyoto Ekimae", coords: [34.9868, 135.7599], note: "<b>交通：</b>關西機場1F 8號搭利木津巴士。<br><b>路痴TIPS：</b>下車在八條口，抬頭找白色京都塔為正面。酒店在京都塔側。<br>15:00後Check-in，行李可寄放。", link: "https://www.klook.com/activity/1541-kix-airport-limousine-bus-transfer-kyoto/", tags: ["移動", "入住"], shopping_items: ["ICOCA (若需儲值)", "涼感濕紙巾", "鹽分補給糖"] },
-                    { time: "午餐 (若早到)", title: "月之藏人", type: "美食", price: "¥2,500", address: "伏見區上油掛町185-1", coords: [34.9310, 135.7610], note: "<b>必點：</b>自家製豆腐、酒粕烤雞。<br>舊酒造改建，氛圍懷舊。", link: "https://tabelog.com/en/", tags: ["美食"] },
-                    { time: "16:00 - 18:00", title: "黃櫻 Kappa Country", type: "清酒", price: "¥2,000", address: "伏見區塩屋町228", coords: [34.9305, 135.7615], note: "<b>必喝：</b>Lucky Cat/Dog 精釀啤酒、夏季柚子酒。<br><b>攻略：</b>河童主題館拍照，河邊座位品酒。<br>交通：近鐵桃山御陵前站步行7分。", tags: ["清酒", "河童"], shopping_items: ["黃櫻清酒", "河童周邊", "夏季酒套裝"] },
-                    { time: "18:00 - 19:00", title: "AEON Mall 超市", type: "購物", price: "¥1,500", address: "京都站八條口 Sakura館", coords: [34.9835, 135.7560], note: "買枝豆、水茄子漬物、刺身拼盤回酒店小酌。", tags: ["超市", "補給"], shopping_items: ["枝豆", "水茄子漬物", "刺身拼盤", "日本酒/啤酒"] },
-                    { time: "晚餐", title: "Okonomiyaki Katsu", type: "美食", price: "¥1,500", address: "京都市下京區", coords: [35.0028, 135.7596], note: "<b>必點：</b>大阪燒小份 (配Highball)。<br>市中心平價小吃，適合輕食後回酒店享用免費夜鳴き蕎麥麵。", link: "https://tabelog.com/en/", tags: ["B級美食", "大阪燒"] }
-                ]
-            },
-            "day2": {
-                "date": "7/16 (四)",
-                "events": [
-                    { time: "早餐", title: "Ogawa Coffee", type: "美食", price: "¥1,200", address: "京都站前地下", coords: [34.9852, 135.7584], note: "<b>必點：</b>京都早餐套餐 (厚片吐司+特調拿鐵)。", tags: ["咖啡"] },
-                    { time: "10:00 - 12:00", title: "月桂冠大倉紀念館", type: "景點", price: "¥600", address: "伏見區南浜町247", coords: [34.9298, 135.7618], note: "<b>重點：</b>試飲夏季冰鎮生酒。必喝中庭伏水井水。<br><b>攻略：</b>參觀釀造工具展。買生酒回酒店冰鎮。", link: "https://www.gekkeikan.com/museum/", tags: ["清酒", "歷史"], shopping_items: ["月桂冠生酒", "清酒杯"] },
-                    { time: "12:00 - 13:30", title: "Gion Matayoshi (午餐)", type: "美食", price: "¥4,000", address: "祇園", coords: [35.0050, 135.7750], note: "<b>必點：</b>午間懷石套餐。<br>米其林級享受，晚餐價格的三分之一。建議預約。", link: "https://tabelog.com/en/", tags: ["懷石", "米其林"] },
-                    { time: "13:30 - 15:30", title: "伏見酒蔵小路", type: "體驗", price: "¥2,500", address: "伏見區納屋町", coords: [34.9330, 135.7605], note: "<b>必點：</b>十八藏試飲 Set (小杯多樣，拍照美)。", link: "https://www.tablecheck.com/en/shops/fushimi-sakagura-kouji/reserve", tags: ["清酒"] },
-                    { time: "16:00 - 17:00", title: "MY ONLY FRAGRANCE", type: "體驗", price: "¥6,000", address: "中京區下丸屋町401-2", coords: [35.0085, 135.7680], note: "調製專屬香水，印上旅程日期。<br>交通：京阪三條站步行5分。", link: "https://www.kkday.com/en-sg/product/248954", tags: ["香氛"], shopping_items: ["專屬香水"] },
-                    { time: "18:00 - 20:00", title: "Mezopotamia Kebab", type: "美食", price: "¥1,000", address: "四條", coords: [35.0040, 135.7600], note: "<b>必點：</b>烤肉捲小份。<br>輕量異國小吃，保留胃口。", link: "https://tabelog.com/en/", tags: ["輕食"] },
-                    { time: "20:00 後", title: "祇園祭「宵山」步行", type: "祭典", price: "¥1,000", address: "四條烏丸", coords: [35.0039, 135.7595], note: "<b>必做：</b>去「長刀鉾」買個「粽」保平安。<br>今天是步行者天國，點燈山鉾很美。<br><span style='color:red;'><b>注意：</b>晚間核心區封路，計程車無法進入，需在烏丸通下車步行。</span>", tags: ["祭典", "必去", "交通管制"], shopping_items: ["長刀鉾 粽 (護身符)"] }
-                ]
-            },
-            "day3": {
-                "date": "7/17 (五)",
-                "events": [
-                    { time: "09:00 - 12:00", title: "山鉾巡行 (前祭)", type: "祭典", price: "免費", address: "御池通/市役所前", coords: [35.0116, 135.7681], note: "<b>攻略：</b>不要在路口擠。去市役所前樹蔭，或巡行後去巷弄看山鉾歸位。<br><span style='color:red;'><b>注意：</b>人潮極多，小心財物。</span>", tags: ["祭典", "交通管制"] },
-                    { time: "午餐", title: "Kikunoi Lunch Set", type: "美食", price: "¥5,000", address: "木屋町/祇園", coords: [35.0035, 135.7705], note: "<b>必點：</b>午間懷石套餐。<br>性價比極高，享用季節高級料理。", link: "https://tabelog.com/en/", tags: ["懷石", "米其林"] },
-                    { time: "13:30 - 16:30", title: "佐佐木酒造", type: "景點", price: "¥2,000", address: "上京區日暮通椹木町", coords: [35.0232, 135.7516], note: "洛中唯一酒造 (佐佐木藏之介老家)。酒款清爽辛口。<br>導覽發酵過程，試飲適合夏季的清酒。", link: "https://wabunka-lux.jp/experiences/en_sasaki-shuzo/", tags: ["酒造"], shopping_items: ["佐佐木酒造 聚樂第", "酒粕"] },
-                    { time: "17:00 - 18:00", title: "Lopia 超市", type: "購物", price: "¥2,000", address: "京都站 Yodobashi B1", coords: [34.9875, 135.7595], note: "肉類極強。必買自家製香腸、大份量壽司 (宵夜)。", tags: ["超市"], shopping_items: ["自家製香腸", "大份量壽司"] }
-                ]
-            },
-             "day4": {
-                "date": "7/18 (六)",
-                "events": [
-                    { time: "早餐 (8:00前)", title: "Vermillion Espresso", type: "美食", price: "¥1,000", address: "伏見稻荷", coords: [34.9671, 135.7727], note: "<b>攻略：</b>8點前到伏見稻荷避人潮。<br>走千本鳥居到「奧社」許願人緣即可折返。", tags: ["神社", "咖啡"], shopping_items: ["狐狸面具煎餅"] },
-                    { time: "11:30 - 14:00", title: "藤岡酒造 (蒼空)", type: "品酒", price: "¥2,000", address: "伏見", coords: [34.9300, 135.7600], note: "<b>必訪：</b>玻璃屋酒吧「酒蔵Bar En」。<br><b>必點：</b>蒼空純米大吟釀，坐吧台看釀酒桶 (文青風)。", tags: ["清酒", "文青"], shopping_items: ["蒼空 清酒杯"] },
-                    { time: "午餐", title: "Wagyu Teppanyaki Kiyomizu", type: "美食", price: "¥4,000", address: "清水寺周邊", coords: [34.9960, 135.7800], note: "<b>必點：</b>午間和牛鐵板燒套餐。<br>享受高級和牛的超值午餐時段。", link: "https://tabelog.com/en/", tags: ["和牛", "鐵板燒"] },
-                    { time: "14:00 - 16:00", title: "天香堂 香道", type: "體驗", price: "¥3,500", address: "嵐山/嵯峨野", coords: [35.0155, 135.6700], note: "製作匂袋 (香包)或聞香體驗。<br>需預約。日式庭園氛圍浪漫。", link: "https://tenkhodou.com/", tags: ["香氛"], shopping_items: ["日式香包 (匂袋)"] },
-                    { time: "加碼", title: "野宮神社", type: "景點", price: "免費", address: "嵐山竹林入口", coords: [35.0178, 135.6743], note: "求良緣摸黑色的「龜石」。源氏物語場景。<br>許願一年內實現良緣。", tags: ["結緣"], shopping_items: ["戀愛御守"] },
-                    { time: "16:30 - 17:30", title: "業務超市", type: "購物", price: "¥1,000", address: "市區", coords: [35.0000, 135.7500], note: "買柚子胡椒醬、七味粉。", tags: ["超市"], shopping_items: ["柚子胡椒", "七味粉"] }
-                ]
-            },
-            "day5": {
-                "date": "7/19 (日)",
-                "events": [
-                    { time: "早餐", title: "Sentido", type: "美食", price: "¥1,000", address: "烏丸御池", coords: [35.0105, 135.7600], note: "<b>必點：</b>熱壓三明治。", tags: ["咖啡"] },
-                    { time: "10:00 - 13:00", title: "錦市場 & 景點午餐", type: "景點/午餐", price: "¥3,000", address: "錦市場", coords: [35.0050, 135.7649], note: "<b>必買：</b>打田漬物(柴漬)。<br><b>Tips：</b>去「津之喜酒舖」找老闆推薦酒。<br>摸天滿宮銅牛求智慧。", tags: ["市場"], shopping_items: ["打田漬物 (柴漬)", "津之喜酒舖 清酒"] },
-                    { time: "下午", title: "下鴨神社 & 河合神社", type: "景點", price: "¥800", address: "出町柳", coords: [35.0345, 135.7720], note: "河合神社必買「鏡繪馬」化妝祈求變美 (第一美容神)。", tags: ["神社", "美容"], shopping_items: ["鏡繪馬 (化妝)", "美人水"] },
-                    { time: "晚餐", title: "Onigiriya Goku", type: "美食", price: "¥1,000", address: "河原町", coords: [35.0000, 135.7680], note: "<b>必點：</b>米飯球小份。<br>平價小吃，配清酒淺嘗，適合獨旅輕食。", link: "https://tabelog.com/en/", tags: ["輕食", "飯糰"] }
-                ]
-            },
-            "day6": {
-                "date": "7/20 (一)",
-                "events": [
-                    { time: "上午", title: "京都文化博物館", type: "景點", price: "¥500", address: "三條高倉", coords: [35.0090, 135.7630], note: "舊銀行建築，很美。逛京都工藝品店。<br>文青拍照點。", tags: ["藝文"], shopping_items: ["京都工藝品"] },
-                    { time: "午餐", title: "Kamigamo Kirin", type: "美食", price: "¥1,500", address: "上賀茂", coords: [35.0550, 135.7550], note: "<b>必點：</b>Obanzai 自助餐。<br>15種以上京都蔬菜菜餚，性價比高。", link: "https://tabelog.com/en/", tags: ["Obanzai", "蔬菜"] },
-                    { time: "14:00 - 16:00", title: "伊勢丹 Isetan", type: "購物", price: "¥10,000", address: "京都站", coords: [34.9858, 135.7588], note: "<b>香水(2/3F)：</b>Shiro / Aux Paradis。<br><b>超市(B1/B2)：</b>551肉包、下鴨茶寮便當。", tags: ["百貨"], shopping_items: ["Shiro / Aux Paradis 香水", "551 肉包", "下鴨茶寮 便當"] },
-                    { time: "20:00 後", title: "後祭山鉾搭建", type: "祭典", price: "免費", address: "烏丸御池", coords: [35.0110, 135.7600], note: "看職人「無釘」組裝大船鉾。人少悠閒，適合沉浸體驗。", tags: ["後祭"] }
-                ]
-            },
-            "day7": {
-                "date": "7/21 (二)",
-                "events": [
-                    { time: "08:00 - 11:00", title: "東寺 弘法市 (古董市集)", type: "市集", price: "¥5,000", address: "東寺", coords: [34.9806, 135.7476], note: "<b>每月21日限定！</b>早8-9點去。<br>目標：買一個古董清酒杯 (猪口)。", tags: ["市集", "尋寶"], shopping_items: ["古董猪口杯"] },
-                    { time: "午餐", title: "市集攤販 / Harvest", type: "美食", price: "¥1,500", address: "東寺周邊", coords: [34.9806, 135.7476], note: "吃攤販炒麵或廣島燒。輕鬆自在。", tags: ["B級美食"] },
-                    { time: "下午", title: "Fresco / Life 超市", type: "購物", price: "¥1,000", address: "二條城附近", coords: [35.0140, 135.7450], note: "順路補充零食。", tags: ["超市"], shopping_items: ["零食", "泡麵"] },
-                    { time: "18:00 - 23:00", title: "後祭宵山 (通人版)", type: "祭典", price: "¥2,000", address: "烏丸御池", coords: [35.0080, 135.7570], note: "看屏風祭。買杯路邊冰鎮清酒，坐著聽祇園囃子。<br>優雅寧靜版宵山。", tags: ["宵山", "氛圍"] }
-                ]
-            },
-            "day8": {
-                "date": "7/22 (三)",
-                "events": [
-                    { time: "早餐", title: "Inoda Coffee 本店", type: "美食", price: "¥1,600", address: "三條", coords: [35.0090, 135.7650], note: "<b>必點：</b>京之朝食 (火腿+炒蛋+招牌咖啡)。", tags: ["老舖"], shopping_items: ["Inoda 咖啡豆"] },
-                    { time: "12:00 - 13:00", title: "最後採買", type: "購物", price: "¥3,000", address: "京都站新幹線口", coords: [34.9858, 135.7588], note: "<b>必買：</b>阿闍梨餅 (軟糯紅豆餅)。", tags: ["伴手禮"], shopping_items: ["阿闍梨餅"] },
-                    { time: "午餐", title: "Premium Pound Gion", type: "美食", price: "¥3,000", address: "祇園", coords: [35.0050, 135.7750], note: "<b>必點：</b>午間和牛套餐。<br>離開前的最後享受。", link: "https://tabelog.com/en/", tags: ["和牛"] },
-                    { time: "前往機場", title: "利木津巴士", type: "交通", price: "¥2,600", address: "京都站八條口", coords: [34.9839, 135.7593], note: "帶著戰利品回家！<br>Klook 巴士票預約。", link: "https://www.klook.com/activity/1541-kix-airport-limousine-bus-transfer-kyoto/", tags: ["移動"] }
-                ]
-            }
+            "day1": { "date": "2026-07-15", "display": "7/15 (三)", "events": [ 
+                { time: "14:00 - 16:00", title: "抵達京都站 & Check-in", type: "交通/住宿", price: "¥2,600", address: "Dormy Inn Premium Kyoto Ekimae", coords: [34.9868, 135.7599], note: "<b>交通：</b>關西機場1F 8號搭利木津巴士。<br>15:00後Check-in，行李可寄放。", link: "https://www.klook.com/activity/1541-kix-airport-limousine-bus-transfer-kyoto/", tags: ["移動", "入住"], shopping_items: ["ICOCA (若需儲值)", "涼感濕紙巾", "鹽分補給糖"] },
+                { time: "午餐 (若早到)", title: "月之藏人", type: "美食", price: "¥2,500", address: "伏見區上油掛町185-1", coords: [34.9310, 135.7610], note: "<b>必點：</b>自家製豆腐、酒粕烤雞。<br>舊酒造改建，氛圍懷舊。", tags: ["美食"] },
+                { time: "16:00 - 18:00", title: "黃櫻 Kappa Country", type: "清酒", price: "¥2,000", address: "伏見區塩屋町228", coords: [34.9305, 135.7615], note: "<b>必喝：</b>Lucky Cat/Dog 精釀啤酒、夏季柚子酒。", tags: ["清酒", "河童"], shopping_items: ["黃櫻清酒", "河童周邊", "夏季酒套裝"] },
+                { time: "18:00 - 19:00", title: "AEON Mall 超市", type: "購物", price: "¥1,500", address: "京都站八條口 Sakura館", coords: [34.9835, 135.7560], note: "買枝豆、水茄子漬物、刺身拼盤回酒店小酌。", tags: ["超市", "補給"], shopping_items: ["枝豆", "水茄子漬物", "刺身拼盤", "日本酒/啤酒"] },
+                { time: "晚餐", title: "Okonomiyaki Katsu", type: "美食", price: "¥1,500", address: "京都市下京區", coords: [35.0028, 135.7596], note: "<b>必點：</b>大阪燒小份 (配Highball)。", tags: ["B級美食", "大阪燒"] }
+            ]},
+            "day2": { "date": "2026-07-16", "display": "7/16 (四)", "events": [
+                { time: "早餐", title: "Ogawa Coffee", type: "美食", price: "¥1,200", address: "京都站前地下", coords: [34.9852, 135.7584], note: "<b>必點：</b>京都早餐套餐。", tags: ["咖啡"] },
+                { time: "10:00 - 12:00", title: "月桂冠大倉紀念館", type: "景點", price: "¥600", address: "伏見區南浜町247", coords: [34.9298, 135.7618], note: "<b>重點：</b>試飲夏季冰鎮生酒。必喝中庭伏水井水。", link: "https://www.gekkeikan.com/museum/", tags: ["清酒", "歷史"], shopping_items: ["月桂冠生酒", "清酒杯"] },
+                { time: "12:00 - 13:30", title: "Gion Matayoshi (午餐)", type: "美食", price: "¥4,000", address: "祇園", coords: [35.0050, 135.7750], note: "<b>必點：</b>午間懷石套餐。", tags: ["懷石", "米其林"] },
+                { time: "13:30 - 15:30", title: "伏見酒蔵小路", type: "體驗", price: "¥2,500", address: "伏見區納屋町", coords: [34.9330, 135.7605], note: "<b>必點：</b>十八藏試飲 Set。", link: "https://www.tablecheck.com/en/shops/fushimi-sakagura-kouji/reserve", tags: ["清酒"] },
+                { time: "16:00 - 17:00", title: "MY ONLY FRAGRANCE", type: "體驗", price: "¥6,000", address: "中京區下丸屋町401-2", coords: [35.0085, 135.7680], note: "調製專屬香水，印上旅程日期。", link: "https://www.kkday.com/en-sg/product/248954", tags: ["香氛"], shopping_items: ["專屬香水"] },
+                { time: "18:00 - 20:00", title: "Mezopotamia Kebab", type: "美食", price: "¥1,000", address: "四條", coords: [35.0040, 135.7600], note: "<b>必點：</b>烤肉捲小份。", tags: ["輕食"] },
+                { time: "20:00 後", title: "祇園祭「宵山」步行", type: "祭典", price: "¥1,000", address: "四條烏丸", coords: [35.0039, 135.7595], note: "<b>必做：</b>去「長刀鉾」買個「粽」。<br><span style='color:red;'><b>注意：</b>晚間核心區封路。</span>", tags: ["祭典", "交通管制"], shopping_items: ["長刀鉾 粽 (護身符)"] }
+            ]},
+            "day3": { "date": "2026-07-17", "display": "7/17 (五)", "events": [
+                { time: "09:00 - 12:00", title: "山鉾巡行 (前祭)", type: "祭典", price: "免費", address: "御池通/市役所前", coords: [35.0116, 135.7681], note: "<b>攻略：</b>不要在路口擠。<span style='color:red;'><b>注意：</b>人潮極多。</span>", tags: ["祭典", "交通管制"] },
+                { time: "午餐", title: "Kikunoi Lunch Set", type: "美食", price: "¥5,000", address: "木屋町/祇園", coords: [35.0035, 135.7705], note: "<b>必點：</b>午間懷石套餐。", tags: ["懷石", "米其林"] },
+                { time: "13:30 - 16:30", title: "佐佐木酒造", type: "景點", price: "¥2,000", address: "上京區日暮通椹木町", coords: [35.0232, 135.7516], note: "洛中唯一酒造 (佐佐木藏之介老家)。", link: "https://wabunka-lux.jp/experiences/en_sasaki-shuzo/", tags: ["酒造"], shopping_items: ["佐佐木酒造 聚樂第", "酒粕"] },
+                { time: "17:00 - 18:00", title: "Lopia 超市", type: "購物", price: "¥2,000", address: "京都站 Yodobashi B1", coords: [34.9875, 135.7595], note: "肉類極強。必買自家製香腸、大份量壽司 (宵夜)。", tags: ["超市"], shopping_items: ["自家製香腸", "大份量壽司"] }
+            ]},
+             "day4": { "date": "2026-07-18", "display": "7/18 (六)", "events": [
+                { time: "早餐 (8:00前)", title: "Vermillion Espresso", type: "美食", price: "¥1,000", address: "伏見稻荷", coords: [34.9671, 135.7727], note: "<b>攻略：</b>8點前到伏見稻荷避人潮。", tags: ["神社", "咖啡"], shopping_items: ["狐狸面具煎餅"] },
+                { time: "11:30 - 14:00", title: "藤岡酒造 (蒼空)", type: "品酒", price: "¥2,000", address: "伏見", coords: [34.9300, 135.7600], note: "<b>必訪：</b>玻璃屋酒吧「酒蔵Bar En」。", tags: ["清酒", "文青"], shopping_items: ["蒼空 清酒杯"] },
+                { time: "午餐", title: "Wagyu Teppanyaki Kiyomizu", type: "美食", price: "¥4,000", address: "清水寺周邊", coords: [34.9960, 135.7800], note: "<b>必點：</b>午間和牛鐵板燒套餐。", tags: ["和牛", "鐵板燒"] },
+                { time: "14:00 - 16:00", title: "天香堂 香道", type: "體驗", price: "¥3,500", address: "嵐山/嵯峨野", coords: [35.0155, 135.6700], note: "製作匂袋 (香包)。", link: "https://tenkhodou.com/", tags: ["香氛"], shopping_items: ["日式香包 (匂袋)"] },
+                { time: "加碼", title: "野宮神社", type: "景點", price: "免費", address: "嵐山竹林入口", coords: [35.0178, 135.6743], note: "求良緣摸黑色的「龜石」。", tags: ["結緣"], shopping_items: ["戀愛御守"] },
+                { time: "16:30 - 17:30", title: "業務超市", type: "購物", price: "¥1,000", address: "市區", coords: [35.0000, 135.7500], note: "買柚子胡椒醬、七味粉。", tags: ["超市"], shopping_items: ["柚子胡椒", "七味粉"] }
+            ]},
+            "day5": { "date": "2026-07-19", "display": "7/19 (日)", "events": [
+                { time: "早餐", title: "Sentido", type: "美食", price: "¥1,000", address: "烏丸御池", coords: [35.0105, 135.7600], note: "<b>必點：</b>熱壓三明治。", tags: ["咖啡"] },
+                { time: "10:00 - 13:00", title: "錦市場 & 景點午餐", type: "景點/午餐", price: "¥3,000", address: "錦市場", coords: [35.0050, 135.7649], note: "<b>必買：</b>打田漬物(柴漬)。", tags: ["市場"], shopping_items: ["打田漬物 (柴漬)", "津之喜酒舖 清酒"] },
+                { time: "下午", title: "下鴨神社 & 河合神社", type: "景點", price: "¥800", address: "出町柳", coords: [35.0345, 135.7720], note: "河合神社必買「鏡繪馬」化妝祈求變美。", tags: ["神社", "美容"], shopping_items: ["鏡繪馬 (化妝)", "美人水"] },
+                { time: "晚餐", title: "Onigiriya Goku", type: "美食", price: "¥1,000", address: "河原町", coords: [35.0000, 135.7680], note: "<b>必點：</b>米飯球小份。", tags: ["輕食", "飯糰"] }
+            ]},
+            "day6": { "date": "2026-07-20", "display": "7/20 (一)", "events": [
+                { time: "上午", title: "京都文化博物館", type: "景點", price: "¥500", address: "三條高倉", coords: [35.0090, 135.7630], note: "舊銀行建築，很美。逛京都工藝品店。", tags: ["藝文"], shopping_items: ["京都工藝品"] },
+                { time: "午餐", title: "Kamigamo Kirin", type: "美食", price: "¥1,500", address: "上賀茂", coords: [35.0550, 135.7550], note: "<b>必點：</b>Obanzai 自助餐。", tags: ["Obanzai", "蔬菜"] },
+                { time: "14:00 - 16:00", title: "伊勢丹 Isetan", type: "購物", price: "¥10,000", address: "京都站", coords: [34.9858, 135.7588], note: "<b>香水：</b>Shiro / Aux Paradis。<b>超市：</b>551肉包、下鴨茶寮便當。", tags: ["百貨"], shopping_items: ["Shiro / Aux Paradis 香水", "551 肉包", "下鴨茶寮 便當"] },
+                { time: "20:00 後", title: "後祭山鉾搭建", type: "祭典", price: "免費", address: "烏丸御池", coords: [35.0110, 135.7600], note: "看職人「無釘」組裝大船鉾。", tags: ["後祭"] }
+            ]},
+            "day7": { "date": "2026-07-21", "display": "7/21 (二)", "events": [
+                { time: "08:00 - 11:00", title: "東寺 弘法市 (古董市集)", type: "市集", price: "¥5,000", address: "東寺", coords: [34.9806, 135.7476], note: "<b>每月21日限定！</b>早8-9點去。<br>目標：買一個古董清酒杯 (猪口)。", tags: ["市集", "尋寶"], shopping_items: ["古董猪口杯"] },
+                { time: "午餐", title: "市集攤販 / Harvest", type: "美食", price: "¥1,500", address: "東寺周邊", coords: [34.9806, 135.7476], note: "吃攤販炒麵或廣島燒。", tags: ["B級美食"] },
+                { time: "下午", title: "Fresco / Life 超市", type: "購物", price: "¥1,000", address: "二條城附近", coords: [35.0140, 135.7450], note: "順路補充零食。", tags: ["超市"], shopping_items: ["零食", "泡麵"] },
+                { time: "18:00 - 23:00", title: "後祭宵山 (通人版)", type: "祭典", price: "¥2,000", address: "烏丸御池", coords: [35.0080, 135.7570], note: "看屏風祭。買杯路邊冰鎮清酒，坐著聽祇園囃子。", tags: ["宵山", "氛圍"] }
+            ]},
+            "day8": { "date": "2026-07-22", "display": "7/22 (三)", "events": [
+                { time: "早餐", title: "Inoda Coffee 本店", type: "美食", price: "¥1,600", address: "三條", coords: [35.0090, 135.7650], note: "<b>必點：</b>京之朝食。", tags: ["老舖"], shopping_items: ["Inoda 咖啡豆"] },
+                { time: "12:00 - 13:00", title: "最後採買", type: "購物", price: "¥3,000", address: "京都站新幹線口", coords: [34.9858, 135.7588], note: "<b>必買：</b>阿闍梨餅 (軟糯紅豆餅)。", tags: ["伴手禮"], shopping_items: ["阿闍梨餅"] },
+                { time: "午餐", title: "Premium Pound Gion", type: "美食", price: "¥3,000", address: "祇園", coords: [35.0050, 135.7750], note: "<b>必點：</b>午間和牛套餐。<br>離開前的最後享受。", tags: ["和牛"] },
+                { time: "前往機場", title: "利木津巴士", type: "交通", price: "¥2,600", address: "京都站八條口", coords: [34.9839, 135.7593], note: "帶著戰利品回家！", link: "https://www.klook.com/activity/1541-kix-airport-limousine-bus-transfer-kyoto/", tags: ["移動"] }
+            ]}
         };
 
         const packingList = ["護照", "ICOCA", "行動電源", "雨具", "防曬", "好走的鞋", "藥品", "網卡"];
@@ -577,144 +499,133 @@
         let map = null;
         let markers = [];
         let waterCount = 0;
-        let currentModalEventTitle = ""; // For saving expense data
-        const STORAGE_KEY = 'kyoto_2026_data_v2';
+        let currentModalEventTitle = "";
+        let weatherData = null; // Store fetched weather data
+        const STORAGE_KEY = 'kyoto_2026_final_v1';
 
-        // --- Logic ---
+        // Open-Meteo WMO Code Mapping
+        const wmoMap = {
+            0: {icon: 'fa-sun', text: '晴朗'}, 1: {icon: 'fa-cloud-sun', text: '多雲'}, 2: {icon: 'fa-cloud', text: '陰天'}, 
+            3: {icon: 'fa-cloud', text: '陰天'}, 45: {icon: 'fa-smog', text: '霧'}, 48: {icon: 'fa-smog', text: '霧'},
+            51: {icon: 'fa-cloud-rain', text: '毛毛雨'}, 53: {icon: 'fa-cloud-rain', text: '小雨'}, 55: {icon: 'fa-cloud-showers-heavy', text: '中雨'},
+            61: {icon: 'fa-cloud-showers-heavy', text: '陣雨'}, 63: {icon: 'fa-cloud-showers-heavy', text: '下雨'}, 65: {icon: 'fa-cloud-showers-water', text: '大雨'},
+            80: {icon: 'fa-cloud-rain', text: '陣雨'}, 81: {icon: 'fa-cloud-showers-heavy', text: '大雨'}, 82: {icon: 'fa-cloud-showers-water', text: '暴雨'},
+            95: {icon: 'fa-cloud-bolt', text: '雷雨'}, 96: {icon: 'fa-cloud-bolt', text: '雷陣雨'}, 99: {icon: 'fa-cloud-bolt', text: '豪大雷雨'}
+        };
+
         function init() { 
             renderDateSelector(); 
-            
-            // Render basic lists first
             renderPackingList();
             renderGeneralShoppingList();
-            
             initMap();
-            loadState(); // Load saved data
-            
-            // Auto Select Date Logic
+            loadState();
+            fetchWeather(); // New: Fetch real weather
             checkDateAndInit();
         }
 
-        // --- Auto Date Logic ---
-        function checkDateAndInit() {
-            const today = new Date();
-            const year = today.getFullYear();
-            const month = today.getMonth() + 1; // Jan is 0
-            const day = today.getDate();
-            
-            // Map dates to day keys (assuming 2026)
-            // Logic: If month is 7 (July) and day is between 15-22, select that day
-            // If testing in a different year, this logic will just default to Day 1 unless we remove year check
-            let targetDay = "day1"; // Default
-            
-            if (month === 7) {
-                if (day >= 15 && day <= 22) {
-                    const diff = day - 15;
-                    targetDay = `day${diff + 1}`;
-                }
+        // --- Fetch Real Weather (Open-Meteo) ---
+        async function fetchWeather() {
+            try {
+                // Kyoto: 35.0116, 135.7681
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=35.0116&longitude=135.7681&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&current_weather=true&timezone=Asia%2FTokyo');
+                weatherData = await res.json();
+                console.log("Weather fetched:", weatherData);
+                renderWeather(currentDay); // Re-render with real data if available
+            } catch(e) {
+                console.error("Weather fetch failed", e);
             }
-            
-            // Find the chip and select it
-            const chips = document.querySelectorAll('.date-chip');
-            let found = false;
-            chips.forEach(chip => {
-                if(chip.innerText.includes(`D${targetDay.replace('day','')}`)) {
-                    selectDay(targetDay, chip);
-                    found = true;
-                    // Auto scroll to active chip on mobile
-                    chip.scrollIntoView({behavior: "smooth", inline: "center", block: "nearest"});
-                }
-            });
-            
-            if(!found) selectDay('day1', chips[0]);
         }
 
-        // --- Data Persistence ---
-        function saveState() {
-            const state = {
-                checks: {},
-                water: waterCount,
-                expenses: {}
-            };
+        function checkDateAndInit() {
+            const today = new Date();
+            // To simulate "During Trip", uncomment below line:
+            // const today = new Date('2026-07-16'); 
             
-            // Checkboxes
+            const month = today.getMonth() + 1;
+            const day = today.getDate();
+            const year = today.getFullYear();
+            
+            // Format today as YYYY-MM-DD for comparison
+            const todayStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            
+            let targetDay = "day1";
+            let found = false;
+
+            // Check if today matches any schedule date
+            Object.keys(scheduleData).forEach(key => {
+                if (scheduleData[key].date === todayStr) {
+                    targetDay = key;
+                    found = true;
+                }
+            });
+
+            const chips = document.querySelectorAll('.date-chip');
+            if(found) {
+                // If it's a trip day, auto-select it
+                chips.forEach(chip => {
+                    if(chip.innerText.includes(`D${targetDay.replace('day','')}`)) {
+                        selectDay(targetDay, chip);
+                        chip.scrollIntoView({behavior: "smooth", inline: "center", block: "nearest"});
+                    }
+                });
+            } else {
+                selectDay('day1', chips[0]);
+            }
+        }
+
+        function saveState() {
+            const state = { checks: {}, water: waterCount, expenses: {} };
             document.querySelectorAll('input[type="checkbox"]').forEach(input => {
                 if(input.id) state.checks[input.id] = input.checked;
             });
-            
-            // Expenses (Retrieved from LocalStorage merged with current input if open)
             const savedRaw = localStorage.getItem(STORAGE_KEY);
             let savedExpenses = {};
-            if(savedRaw) {
-                try { savedExpenses = JSON.parse(savedRaw).expenses || {}; } catch(e){}
-            }
+            if(savedRaw) { try { savedExpenses = JSON.parse(savedRaw).expenses || {}; } catch(e){} }
             state.expenses = savedExpenses;
-            
-            // If modal is open, update current expense
             const costInput = document.getElementById('modal-actual-cost');
-            if(costInput && currentModalEventTitle) {
-                state.expenses[currentModalEventTitle] = costInput.value;
-            }
-
+            if(costInput && currentModalEventTitle) { state.expenses[currentModalEventTitle] = costInput.value; }
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         }
 
         function loadState() {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (!saved) return;
-            
             try {
                 const state = JSON.parse(saved);
-                
                 if (typeof state.water === 'number') {
                     waterCount = state.water;
                     const wc = document.getElementById('water-count');
                     if(wc) wc.innerText = waterCount;
                 }
-
                 setTimeout(() => {
-                    // Restore Checkboxes
                     Object.keys(state.checks).forEach(id => {
                         const el = document.getElementById(id);
                         if (el) {
                             el.checked = state.checks[id];
-                            if(el.parentElement.classList.contains('checklist-item')) {
-                                el.parentElement.classList.toggle('checked', el.checked);
-                            }
+                            if(el.parentElement.classList.contains('checklist-item')) el.parentElement.classList.toggle('checked', el.checked);
                         }
                     });
                 }, 100);
             } catch (e) { console.error("Load failed", e); }
         }
         
-        function saveExpense() {
-            saveState();
-        }
-
+        function saveExpense() { saveState(); }
         function getSavedExpense(title) {
             const saved = localStorage.getItem(STORAGE_KEY);
             if (!saved) return "";
-            try {
-                const state = JSON.parse(saved);
-                return state.expenses && state.expenses[title] ? state.expenses[title] : "";
-            } catch(e) { return ""; }
+            try { const state = JSON.parse(saved); return state.expenses && state.expenses[title] ? state.expenses[title] : ""; } catch(e) { return ""; }
         }
 
         function switchMainPage(pageId, navEl) {
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + pageId).classList.add('active');
-            
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            if(navEl) {
-                navEl.classList.add('active');
-            } else {
+            if(navEl) navEl.classList.add('active');
+            else {
                 const idx = ['itinerary', 'map', 'weather', 'shopping'].indexOf(pageId);
                 if(idx !== -1) document.querySelectorAll('.nav-item')[idx].classList.add('active');
             }
-
-            if(pageId === 'map' && map) {
-                setTimeout(() => { map.invalidateSize(); fitMapToDay(); }, 200);
-            }
+            if(pageId === 'map' && map) setTimeout(() => { map.invalidateSize(); fitMapToDay(); }, 200);
         }
 
         function openToolsPage() {
@@ -734,7 +645,7 @@
                 const chip = document.createElement('div');
                 chip.className = `date-chip`;
                 chip.onclick = () => selectDay(dayKey, chip);
-                chip.innerHTML = `<span class="day-num">D${dayNum}</span><span class="day-week">${dayInfo.date.split(' ')[0]}</span>`;
+                chip.innerHTML = `<span class="day-num">D${dayNum}</span><span class="day-week">${dayInfo.display.split(' ')[0]}</span>`;
                 container.appendChild(chip);
             });
         }
@@ -743,22 +654,18 @@
             currentDay = dayKey;
             document.querySelectorAll('.date-chip').forEach(c => c.classList.remove('active'));
             if(chipEl) chipEl.classList.add('active');
-            
             renderTimeline(dayKey);
-            renderWeather(dayKey);
+            renderWeather(dayKey); // Now smart render
             renderDailyShopping(dayKey);
             if(map) updateMapMarkers(dayKey);
-            
-            // Re-apply checkbox states for new generated content
             loadState(); 
         }
 
         function renderTimeline(dayKey) {
             const container = document.getElementById('timeline-container'); container.innerHTML = '';
             const dayTitle = document.createElement('h3'); dayTitle.style.marginBottom='20px';
-            dayTitle.innerHTML = `<span style="color:var(--accent-color); font-family:'Shippori Mincho',serif;">${scheduleData[dayKey].date}</span>`;
+            dayTitle.innerHTML = `<span style="color:var(--accent-color); font-family:'Shippori Mincho',serif;">${scheduleData[dayKey].display}</span>`;
             container.appendChild(dayTitle);
-
             scheduleData[dayKey].events.forEach(event => {
                 const item = document.createElement('div'); item.className = 'timeline-item';
                 let tagsHtml = event.tags.map(t => {
@@ -767,46 +674,67 @@
                     if(t.includes('管制')) c+=' alert';
                     return `<span class="${c}">${t}</span>`;
                 }).join('');
-                
                 let priceHtml = event.price ? `<div class="card-price">${event.price}</div>` : '';
-
-                item.innerHTML = `<div class="card" onclick='openEventModal(${JSON.stringify(event).replace(/'/g, "&#39;")})'>
-                    <span class="card-time">${event.time}</span>
-                    <h3 class="card-title">${event.title}</h3>
-                    <div class="tags">${tagsHtml}</div>
-                    ${priceHtml}
-                </div>`;
+                item.innerHTML = `<div class="card" onclick='openEventModal(${JSON.stringify(event).replace(/'/g, "'")})'>
+                    <span class="card-time">${event.time}</span><h3 class="card-title">${event.title}</h3><div class="tags">${tagsHtml}</div>${priceHtml}</div>`;
                 container.appendChild(item);
             });
         }
 
         function renderWeather(dayKey) {
             const container = document.getElementById('weather-content');
-            const baseTemp = 34;
-            const dayIndex = parseInt(dayKey.replace('day', ''));
-            const temp = baseTemp + (dayIndex % 2 === 0 ? 1 : -1);
-            const humidity = 70 + (dayIndex % 5);
+            const targetDate = scheduleData[dayKey].date; // "2026-07-15"
             
-            let icon = "fa-cloud-sun";
-            let desc = "多雲悶熱";
-            let rainChance = 20;
+            // 1. Logic: Check if we have real API data for this specific date
+            let realData = null;
+            let isReal = false;
 
-            if(dayIndex % 3 === 0) { icon = "fa-cloud-bolt"; desc = "午後雷陣雨"; rainChance = 60; }
-            else if (dayIndex % 4 === 0) { icon = "fa-sun"; desc = "晴朗酷熱"; rainChance = 10; }
+            if (weatherData && weatherData.daily && weatherData.daily.time) {
+                const index = weatherData.daily.time.indexOf(targetDate);
+                if (index !== -1) {
+                    // Match Found! Use Real Data
+                    realData = {
+                        max: weatherData.daily.temperature_2m_max[index],
+                        min: weatherData.daily.temperature_2m_min[index],
+                        code: weatherData.daily.weathercode[index],
+                        rain: weatherData.daily.precipitation_probability_max[index]
+                    };
+                    isReal = true;
+                }
+            }
+
+            // 2. Logic: Fallback to Simulation if no real data (e.g., planning for 2026 in 2025)
+            if (!isReal) {
+                // Simulation Logic (Simulate Hot Kyoto Summer)
+                const baseTemp = 34;
+                const dayIndex = parseInt(dayKey.replace('day', ''));
+                realData = {
+                    max: baseTemp + (dayIndex % 2 === 0 ? 1 : -1),
+                    min: 26,
+                    code: (dayIndex % 3 === 0) ? 95 : ((dayIndex % 4 === 0) ? 0 : 1), // Fake thunderstorm or sun
+                    rain: (dayIndex % 3 === 0) ? 60 : 20
+                };
+            }
+
+            // Render
+            const wmo = wmoMap[realData.code] || {icon: 'fa-cloud', text: '多雲'};
+            const sourceText = isReal ? "即時衛星預報 (Open-Meteo)" : "歷史平均氣候 (模擬)";
+            const bgClass = realData.max > 32 ? "hot" : "";
 
             container.innerHTML = `
-                <div class="weather-card">
-                    <div style="font-size:0.9rem; opacity:0.9;">${scheduleData[dayKey].date} • 京都</div>
+                <div class="weather-card ${bgClass}">
+                    <div class="weather-source-badge">${sourceText}</div>
+                    <div style="font-size:0.9rem; opacity:0.9;">${scheduleData[dayKey].display} • 京都</div>
                     <div class="weather-main">
-                        <div class="weather-icon"><i class="fa-solid ${icon}"></i></div>
-                        <div class="weather-temp">${temp}°C</div>
+                        <div class="weather-icon"><i class="fa-solid ${wmo.icon}"></i></div>
+                        <div class="weather-temp">${Math.round(realData.max)}°C</div>
                     </div>
-                    <div style="font-size:1.2rem; margin-bottom:15px;">${desc}</div>
+                    <div style="font-size:1.2rem; margin-bottom:15px;">${wmo.text} <span style="font-size:0.8rem; opacity:0.8;">(低溫 ${Math.round(realData.min)}°)</span></div>
                     <div class="weather-grid">
-                        <div class="w-item"><i class="fa-solid fa-droplet"></i> 濕度 ${humidity}%</div>
-                        <div class="w-item"><i class="fa-solid fa-umbrella"></i> 降雨 ${rainChance}%</div>
+                        <div class="w-item"><i class="fa-solid fa-umbrella"></i> 降雨 ${realData.rain}%</div>
                         <div class="w-item"><i class="fa-solid fa-wind"></i> 風速 2級</div>
-                        <div class="w-item"><i class="fa-solid fa-temperature-arrow-up"></i> 體感 ${temp+4}°</div>
+                        <div class="w-item"><i class="fa-solid fa-droplet"></i> 濕度 75%</div>
+                        <div class="w-item"><i class="fa-solid fa-temperature-arrow-up"></i> 體感 ${Math.round(realData.max)+4}°</div>
                     </div>
                 </div>
             `;
@@ -821,43 +749,28 @@
         function renderDailyShopping(dayKey) {
             const container = document.getElementById('daily-shopping-list');
             container.innerHTML = '';
-            
             const events = scheduleData[dayKey].events;
             let hasItems = false;
-
             events.forEach(event => {
                 if (event.shopping_items && event.shopping_items.length > 0) {
                     hasItems = true;
                     const group = document.createElement('div');
                     group.className = 'shopping-group';
-                    
                     let itemsHtml = '';
                     event.shopping_items.forEach((item, i) => {
                         const id = `shop-${dayKey}-${event.title}-${i}`.replace(/\s+/g, '');
-                        itemsHtml += `<div class="checklist-item" onclick="toggleCheck(this)">
-                            <input type="checkbox" id="${id}">
-                            <label for="${id}"><span>${item}</span></label>
-                        </div>`;
+                        itemsHtml += `<div class="checklist-item" onclick="toggleCheck(this)"><input type="checkbox" id="${id}"><label for="${id}"><span>${item}</span></label></div>`;
                     });
-
                     group.innerHTML = `<h4 class="shopping-section-title"><i class="fa-solid fa-location-dot"></i> ${event.title}</h4>${itemsHtml}`;
                     container.appendChild(group);
                 }
             });
-
-            if (!hasItems) {
-                container.innerHTML = `<div style="text-align:center; padding:30px; opacity:0.5;">
-                    <i class="fa-solid fa-bag-shopping" style="font-size:2rem; margin-bottom:10px;"></i><br>
-                    本日以觀光為主，無特定購物建議
-                </div>`;
-            }
+            if (!hasItems) container.innerHTML = `<div style="text-align:center; padding:30px; opacity:0.5;"><i class="fa-solid fa-bag-shopping" style="font-size:2rem; margin-bottom:10px;"></i><br>本日以觀光為主，無特定購物建議</div>`;
         }
 
         function renderGeneralShoppingList() {
             const container = document.getElementById('general-shopping-container');
-            generalShoppingListItems.forEach((item,i) => {
-                container.innerHTML += `<div class="checklist-item" onclick="toggleCheck(this)"><input type="checkbox" id="g${i}"><label for="g${i}"><span>${item}</span></label></div>`;
-            });
+            generalShoppingListItems.forEach((item,i) => container.innerHTML += `<div class="checklist-item" onclick="toggleCheck(this)"><input type="checkbox" id="g${i}"><label for="g${i}"><span>${item}</span></label></div>`);
         }
 
         function renderPackingList() {
@@ -868,9 +781,7 @@
         
         function toggleCheck(el) { 
             const i = el.querySelector('input'); 
-            if(event.target !== i) {
-                i.checked = !i.checked; 
-            }
+            if(event.target !== i) i.checked = !i.checked; 
             el.classList.toggle('checked', i.checked); 
             saveState();
         }
@@ -879,20 +790,16 @@
             const rate = parseFloat(document.getElementById('rate-setting').value) || 0.052;
             const jpy = document.getElementById('jpy-input'); 
             const hkd = document.getElementById('hkd-input');
-            
             if(type==='jpy') {
-                if(jpy.value === '') hkd.value = '';
-                else hkd.value = (jpy.value * rate).toFixed(1); 
+                if(jpy.value === '') hkd.value = ''; else hkd.value = (jpy.value * rate).toFixed(1); 
             } else {
-                if(hkd.value === '') jpy.value = '';
-                else jpy.value = (hkd.value / rate).toFixed(0);
+                if(hkd.value === '') jpy.value = ''; else jpy.value = (hkd.value / rate).toFixed(0);
             }
         }
 
         function sendSafetyMessage() {
              if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(pos) {
-                    // Fix: Use Universal Google Maps Link
                     const link = `https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`;
                     window.open(`https://wa.me/?text=${encodeURIComponent("Hello! 我在京都一切安好，目前位置：" + link)}`, '_blank');
                 });
@@ -900,40 +807,23 @@
         }
 
         function openEventModal(event) {
-            currentModalEventTitle = event.title; // Set current event for expense saving
-            
+            currentModalEventTitle = event.title;
             document.getElementById('modal-title').innerText = event.title;
             document.getElementById('modal-type').innerText = event.type;
             document.getElementById('modal-time').innerText = event.time;
             document.getElementById('modal-address').innerText = event.address;
             document.getElementById('modal-note').innerHTML = event.note;
-            
-            // Restore actual cost
             document.getElementById('modal-actual-cost').value = getSavedExpense(event.title);
-            
             document.getElementById('taxi-address').innerText = event.address;
             document.getElementById('taxi-name').innerText = event.title;
             document.getElementById('taxi-card').style.display = 'none';
-
             const priceRow = document.getElementById('modal-price-row');
-            if (event.price) {
-                priceRow.style.display = 'flex';
-                document.getElementById('modal-price').innerText = "預算/門票：" + event.price;
-            } else {
-                priceRow.style.display = 'none';
-            }
-
+            if (event.price) { priceRow.style.display = 'flex'; document.getElementById('modal-price').innerText = "預算/門票：" + event.price; } else { priceRow.style.display = 'none'; }
             const lc = document.getElementById('modal-links'); lc.innerHTML = '';
             if(event.link) lc.innerHTML = `<a href="${event.link}" target="_blank" class="link-btn"><i class="fa-solid fa-link"></i> 預約/詳情</a>`;
-            
-            // Fix: Universal Google Maps Link
             let mapUrl = "";
-            if(event.coords) {
-                mapUrl = `https://www.google.com/maps/search/?api=1&query=${event.coords[0]},${event.coords[1]}`;
-            } else {
-                const q = encodeURIComponent(event.address + " " + event.title);
-                mapUrl = `https://www.google.com/maps/search/?api=1&query=${q}`;
-            }
+            if(event.coords) mapUrl = `https://www.google.com/maps/search/?api=1&query=${event.coords[0]},${event.coords[1]}`;
+            else { const q = encodeURIComponent(event.address + " " + event.title); mapUrl = `https://www.google.com/maps/search/?api=1&query=${q}`; }
             document.getElementById('modal-map-btn').onclick = () => window.open(mapUrl, '_blank');
             document.getElementById('detail-modal').classList.add('open');
         }
@@ -943,14 +833,10 @@
             card.style.display = card.style.display === 'none' ? 'block' : 'none';
         }
 
-        function closeModal() { 
-            document.getElementById('detail-modal').classList.remove('open'); 
-            currentModalEventTitle = ""; // Clear current event
-        }
+        function closeModal() { document.getElementById('detail-modal').classList.remove('open'); currentModalEventTitle = ""; }
         document.getElementById('detail-modal').addEventListener('click', function(e){if(e.target===this)closeModal()});
         function openTipsModal() { openEventModal({title:"路痴救星",type:"TIPS",time:"隨時",address:"京都全區",note:"1.京都塔在北邊 (車站正面)<br>2.公車後門上車，前門付款<br>3.善用Google Live View AR導航<br>4.迷路就搭計程車 (門自動開)", tags:[]}); }
 
-        // --- Map Logic ---
         function initMap() {
             map = L.map('map-container');
             L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '© OpenStreetMap' }).addTo(map);
@@ -961,40 +847,21 @@
             if(!map) return;
             markers.forEach(m => map.removeLayer(m));
             markers = [];
-            
             const events = scheduleData[dayKey].events;
             const group = new L.featureGroup();
-
             events.forEach(event => {
                 if(event.coords) {
                     const navUrl = `https://www.google.com/maps/search/?api=1&query=${event.coords[0]},${event.coords[1]}`;
-                    const popupContent = `
-                        <div style="text-align:center">
-                            <b>${event.title}</b><br>${event.time}<br>
-                            <a href="${navUrl}" target="_blank" style="display:inline-block; margin-top:5px; color:#E95464; text-decoration:none; font-weight:bold;">
-                                <i class="fa-solid fa-location-arrow"></i> 導航
-                            </a>
-                        </div>
-                    `;
+                    const popupContent = `<div style="text-align:center"><b>${event.title}</b><br>${event.time}<br><a href="${navUrl}" target="_blank" style="display:inline-block; margin-top:5px; color:#E95464; text-decoration:none; font-weight:bold;"><i class="fa-solid fa-location-arrow"></i> 導航</a></div>`;
                     const m = L.marker(event.coords).addTo(map).bindPopup(popupContent);
                     markers.push(m);
                     group.addLayer(m);
                 }
             });
-
-            if(markers.length > 0) {
-                map.fitBounds(group.getBounds(), {padding: [50, 50]});
-            } else {
-                map.setView([35.0000, 135.7600], 13);
-            }
+            if(markers.length > 0) map.fitBounds(group.getBounds(), {padding: [50, 50]}); else map.setView([35.0000, 135.7600], 13);
         }
         
-        function fitMapToDay() {
-            if(map && markers.length > 0) {
-                const group = new L.featureGroup(markers);
-                map.fitBounds(group.getBounds(), {padding: [50, 50]});
-            }
-        }
+        function fitMapToDay() { if(map && markers.length > 0) { const group = new L.featureGroup(markers); map.fitBounds(group.getBounds(), {padding: [50, 50]}); } }
 
         init();
     </script>
